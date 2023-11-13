@@ -76,7 +76,7 @@
     <!-- Downsamples the input cloud -->
     <node pkg="central_benchmark" type="cloud_downsampler" 
       name="$(arg drone_id_ns)_cloud_downsampler" output="screen">
-      <param name="~queue_size" value="5" />
+      <param name="~queue_size" value="1" />
       <param name="~voxel_size" value="0.1" />
 
       <remap from="~cloud_in" to="/$(arg drone_id_ns)/$(arg cloud_topic_fake)" />

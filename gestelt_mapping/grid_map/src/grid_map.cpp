@@ -450,11 +450,13 @@ void GridMap::octreeToPclPC(std::shared_ptr<octomap::OcTree> tree, pcl::PointClo
   pcl_cloud->points.clear();
   for (octomap::OcTree::iterator it = tree->begin(); it != tree->end(); ++it)
   {
-    if(tree->isNodeOccupied(*it))
-    {
-      octomap::point3d occ_point = it.getCoordinate();
-      pcl::PointXYZ pcl_occ_point(occ_point(0), occ_point(1), occ_point(2));
-      pcl_cloud->push_back(pcl_occ_point);
+    if (it != NULL){
+      if(tree->isNodeOccupied(*it))
+      {
+        octomap::point3d occ_point = it.getCoordinate();
+        pcl::PointXYZ pcl_occ_point(occ_point(0), occ_point(1), occ_point(2));
+        pcl_cloud->push_back(pcl_occ_point);
+      }
     }
   }
   
@@ -502,7 +504,6 @@ void GridMap::publishMap()
 }
 
 
-
 /** GRidmap operations */
 
 int GridMap::getOccupancy(const Eigen::Vector3d &pos)
@@ -515,8 +516,11 @@ int GridMap::getOccupancy(const Eigen::Vector3d &pos)
   octomap::point3d octo_pos(pos(0), pos(1), pos(2));
   octomap::OcTreeNode* node = octree_->search(octo_pos);
 
-  if (node && octree_->isNodeOccupied(node)){
-    return 1;
+  if (node != NULL){
+    if (octree_->isNodeOccupied(node)){
+      return 1;
+
+    }
   }
   return 0;
 }
@@ -532,8 +536,11 @@ int GridMap::getInflateOccupancy(const Eigen::Vector3d &pos)
     for(float y = pos(1) - mp_.inflation_; y <= pos(1) + mp_.inflation_; y += mp_.resolution_){
       for(float z = pos(2) - mp_.inflation_; z <= pos(2) + mp_.inflation_; z += mp_.resolution_){
         octomap::OcTreeNode* node = octree_->search(x, y, z);
-        if (node && octree_->isNodeOccupied(node)){
-          return 1;
+        if (node != NULL){
+          if (octree_->isNodeOccupied(node)){
+            return 1;
+
+          }
         }
       }
     }
