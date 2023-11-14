@@ -83,9 +83,11 @@
         <param name="grid_map/map_size_x" value="$(arg map_size_x)" />
         <param name="grid_map/map_size_y" value="$(arg map_size_y)" />
         <param name="grid_map/map_size_z" value="$(arg map_size_z)" />
-        <param name="grid_map/local_map_size_x" value="1.5" />
-        <param name="grid_map/local_map_size_y" value="1.5" />
-        <param name="grid_map/local_map_size_z" value="2.5" />
+        <param name="grid_map/local_map_size_x" value="120" />
+        <param name="grid_map/local_map_size_y" value="120" />
+        <param name="grid_map/local_map_size_z" value="5" />
+
+        <param name="grid_map/keep_global_map" value="true" />
 
         <param name="grid_map/global_frame" value="$(arg global_frame)"/>
         <param name="grid_map/uav_origin_frame" value="$(arg drone_origin_frame)"/>
@@ -128,7 +130,7 @@
         <param name="manager/max_vel" value="$(arg max_vel)" type="double"/>
         <param name="manager/max_acc" value="$(arg max_acc)" type="double"/>
         <!-- polyTraj_piece_length: distance between adjacent B-spline control points-->
-        <param name="manager/polyTraj_piece_length" value="0.5" type="double"/>
+        <param name="manager/polyTraj_piece_length" value="1.5" type="double"/>
         <!-- feasibility_tolerance: permitted ratio of vel/acc exceeding limits -->
         <param name="manager/feasibility_tolerance" value="0.05" type="double"/>
         <param name="manager/planning_horizon" value="$(arg planning_horizon)" type="double"/>
@@ -139,14 +141,14 @@
         <param name="optimization/constraint_points_perPiece" value="5" type="int"/>
         <param name="optimization/weight_obstacle" value="10000.0" type="double"/>
         <param name="optimization/weight_obstacle_soft" value="5000.0" type="double"/>
-        <param name="optimization/weight_swarm" value="50000.0" type="double"/>
+        <param name="optimization/weight_swarm" value="10000.0" type="double"/>
         <param name="optimization/weight_feasibility" value="10000.0" type="double"/>
         <param name="optimization/weight_sqrvariance" value="10000.0" type="double"/>
         <param name="optimization/weight_time" value="10.0" type="double"/>
         <param name="optimization/weight_formation" value="100" type="double"/>
-        <param name="optimization/obstacle_clearance" value="0.4" type="double"/>
+        <param name="optimization/obstacle_clearance" value="0.1" type="double"/>
         <param name="optimization/obstacle_clearance_soft" value="0.5" type="double"/>
-        <param name="optimization/swarm_clearance" value="0.4" type="double"/>
+        <param name="optimization/swarm_clearance" value="0.5" type="double"/>
         <param name="optimization/max_vel" value="$(arg max_vel)" type="double"/>
         <param name="optimization/max_acc" value="$(arg max_acc)" type="double"/>
         <param name="optimization/max_jer" value="$(arg max_jer)" type="double"/>

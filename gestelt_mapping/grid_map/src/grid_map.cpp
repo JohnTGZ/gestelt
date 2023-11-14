@@ -19,7 +19,7 @@ void GridMap::initMap(ros::NodeHandle &nh)
   node_.param("grid_map/local_map_size_y", local_y_size, -1.0);
   node_.param("grid_map/local_map_size_z", local_z_size, -1.0);
 
-  node_.param("grid_map/keep_global_map", mp_.keep_global_map_, false);
+  node_.param("grid_map/keep_global_map", mp_.keep_global_map_, true);
 
   node_.param("grid_map/occ_grid/resolution", mp_.resolution_, -1.0);
   node_.param("grid_map/occ_grid/inflation", mp_.inflation_, -1.0);
@@ -306,12 +306,12 @@ void GridMap::updateLocalMap(){
   md_.local_map_max_(2) = mp_.local_map_size_(2) + md_.cam_pos_(2);
 
   // Update bounds of octomap
-  if (!mp_.keep_global_map_){
-    octomap::point3d bbx_min(md_.local_map_min_(0), md_.local_map_min_(1), md_.local_map_min_(2));
-    octomap::point3d bbx_max(md_.local_map_max_(0), md_.local_map_max_(1), md_.local_map_max_(2));
-    octree_->setBBXMin(bbx_min);
-    octree_->setBBXMax(bbx_max);
-  }
+  // if (!mp_.keep_global_map_){
+  //   octomap::point3d bbx_min(md_.local_map_min_(0), md_.local_map_min_(1), md_.local_map_min_(2));
+  //   octomap::point3d bbx_max(md_.local_map_max_(0), md_.local_map_max_(1), md_.local_map_max_(2));
+  //   octree_->setBBXMin(bbx_min);
+  //   octree_->setBBXMax(bbx_max);
+  // }
 }
 
 void GridMap::getCamToGlobalPose(const geometry_msgs::Pose &pose)
@@ -495,12 +495,12 @@ void GridMap::publishMap()
     return;
   }
 
-  octreeToPclPC(octree_, global_map_origin_);
+  // octreeToPclPC(octree_, global_map_origin_);
 
-  sensor_msgs::PointCloud2 cloud_msg;
-  pcl::toROSMsg(*global_map_origin_, cloud_msg);
+  // sensor_msgs::PointCloud2 cloud_msg;
+  // pcl::toROSMsg(*global_map_origin_, cloud_msg);
 
-  occ_map_pub_.publish(cloud_msg);
+  // occ_map_pub_.publish(cloud_msg);
 }
 
 

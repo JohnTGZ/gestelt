@@ -1,8 +1,8 @@
 <launch>
-  <arg name="num_drones" default="4"/>
+  <arg name="num_drones" default="12"/>
   <!-- size of map, change the size inflate x, y, z according to your application -->
-  <arg name="map_size_x" default="80.0"/>
-  <arg name="map_size_y" default="80.0"/>
+  <arg name="map_size_x" default="120.0"/>
+  <arg name="map_size_y" default="120.0"/>
   <arg name="map_size_z" default="5.0"/>
   <arg name="map_filepath_rel" default="demo_map.pcd" />
   <arg name="map_filepath_abs" default="$(find gestelt_bringup)/simulation/fake_map_worlds/$(arg map_filepath_rel)" />
@@ -55,7 +55,7 @@
     <arg name="map_size_z" value="$(arg map_size_z)"/>
   </include>
 
-  <!-- <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
+  <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
     <arg name="drone_id"   value="2"/>
     <arg name="init_x"     value="-0.5"/>
     <arg name="init_y"     value="-0.5"/>
@@ -65,9 +65,9 @@
     <arg name="map_size_x" value="$(arg map_size_x)"/>
     <arg name="map_size_y" value="$(arg map_size_y)"/>
     <arg name="map_size_z" value="$(arg map_size_z)"/>
-  </include> -->
+  </include>
 
-  <!-- <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
+  <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
     <arg name="drone_id"   value="3"/>
     <arg name="init_x"     value="-0.5"/>
     <arg name="init_y"     value="0.5"/>
@@ -77,9 +77,9 @@
     <arg name="map_size_x" value="$(arg map_size_x)"/>
     <arg name="map_size_y" value="$(arg map_size_y)"/>
     <arg name="map_size_z" value="$(arg map_size_z)"/>
-  </include> -->
+  </include>
 
-  <!-- <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
+  <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
     <arg name="drone_id"   value="4"/>
     <arg name="init_x"     value="0.0"/>
     <arg name="init_y"     value="1.0"/>
@@ -125,9 +125,9 @@
     <arg name="map_size_x" value="$(arg map_size_x)"/>
     <arg name="map_size_y" value="$(arg map_size_y)"/>
     <arg name="map_size_z" value="$(arg map_size_z)"/>
-  </include> -->
+  </include>
 
-  <!-- <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
+  <include file="$(find gestelt_bringup)/launch/fake_drone/fake_drone_single.xml">
     <arg name="drone_id"   value="8"/>
     <arg name="init_x"     value="1.0"/>
     <arg name="init_y"     value="1.0"/>
@@ -173,6 +173,6 @@
     <arg name="map_size_x" value="$(arg map_size_x)"/>
     <arg name="map_size_y" value="$(arg map_size_y)"/>
     <arg name="map_size_z" value="$(arg map_size_z)"/>
-  </include> -->
+  </include>
 
 </launch>
