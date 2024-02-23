@@ -146,7 +146,7 @@ class LearningAgileAgent():
         self.gate_center = gate_center
         self.gate_pose = gate_pose
         self.t_tra_abs =t_tra_abs
-        self.max_tra_w=60
+        self.max_tra_w=max_tra_w
 
     def problem_definition(self,drone_init_quat=None,gazebo_sim=False,dyn_step=0.002):
         """
