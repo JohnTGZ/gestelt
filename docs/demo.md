@@ -18,8 +18,10 @@ These are instructions for demo in the Vicon room with multiple drones.
 4. Pre-flight
     - Make sure drone is receiving location via Vicon
     - Make sure the same map is being received.
+    - Check safety bounds to be within vicon room
 
 5. Flight
+    - Test flying each drone individually with manual control
     - Test take-off and landing.
     - Test planning without physical obstacles.
     - Test planning with physical obstacles.
