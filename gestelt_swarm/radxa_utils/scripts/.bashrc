@@ -123,6 +123,9 @@ alias sros="source /opt/ros/noetic/setup.bash"
 alias sws="source devel/setup.bash"
 alias sbash="source /home/rock/.bashrc"
 
+# Set UAV-ID here
+export UAV_ID=0
+
 # Multi-machine ROS communication
 export MASTER_IP=192.168.31.22
 export SELF_IP=192.168.31.166
@@ -135,7 +138,8 @@ export ROS_HOSTNAME=$SELF_IP
 export ROS_IP=$SELF_IP
 
 # Startup for demo
-alias uav_startup="cd_scripts && cd vicon && ./offboard.sh 0"
+alias uav_startup="cd_scripts && cd vicon && ./offboard.sh $UAV_ID"
+alias test_uav_startup="cd_scripts && cd vicon && ./offboard_local_test.sh $UAV_ID"
 
 # Convenience function
 alias ez_pull="git -C ~/gestelt_ws/src/gestelt/ pull"

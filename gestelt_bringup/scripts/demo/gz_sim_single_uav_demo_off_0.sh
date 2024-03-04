@@ -25,13 +25,13 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$gestelt_bringup_DIR:$PX4_AUTOPILOT_RE
 # Commands
 #####
 CMD_0="
-roslaunch gestelt_bringup single_uav_sim.launch drone_id:=0 init_x:=0.5 init_y:=0.5
+roslaunch --wait gestelt_bringup single_uav_sim.launch drone_id:=0 init_x:=0.5 init_y:=0.5
 "
 
-CMD_1="roslaunch gestelt_bringup single_fake_map.launch drone_id:=0"
+CMD_1="roslaunch --wait gestelt_bringup single_fake_map.launch drone_id:=0"
 
 CMD_2="
-roslaunch gestelt_bringup single_ego_planner.launch drone_id:=0 init_x:=0.4 init_y:=0.4 POSE_TYPE:=3 SENSOR_TYPE:=1
+roslaunch --wait gestelt_bringup single_ego_planner.launch drone_id:=0 init_x:=0.5 init_y:=0.5 POSE_TYPE:=3 SENSOR_TYPE:=1
 "
 
 if [ "$SESSIONEXISTS" = "" ]
@@ -43,7 +43,6 @@ then
     tmux split-window -t $SESSION:0.0 -h
 
     tmux send-keys -t $SESSION:0.0 "$SOURCE_PX4_AUTOPILOT $CMD_0" C-m 
-    sleep 3
     tmux send-keys -t $SESSION:0.1 "$SOURCE_WS $CMD_1" C-m 
     tmux send-keys -t $SESSION:0.2 "$SOURCE_WS $CMD_2" C-m 
     # tmux send-keys -t $SESSION:0.3 "$SOURCE_WS $CMD_3"

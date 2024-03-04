@@ -1,14 +1,38 @@
 # Demo
 These are instructions for demo in the Vicon room with multiple drones.
 
-## Preparation
-1. Turn on Vicon computer
-2. Batteries (charged)
-3. Laptop (charged)
-4. Radio Controller (Charged)
-5. Drones 
+## Pre-flight checks
+1. FCU Set-up
+    - Make sure important flight params have been flashed properly.
+        - MAV_SYS_ID MUST be unique for each drone
+    - Calibrate sensors. 
+    - Make sure transmitter is working (visually inspect in QGroundControl "radio" as you move the gimbals)
+    - Do motor tests
 
-### Set-up 
+2. Onboard computer
+    - Test the Onboard computer to FCU connection via MAVROS node.
+
+3. Simulation
+    - Do test runs of the simulated environment.
+
+4. Pre-flight
+    - Make sure drone is receiving location via Vicon
+    - Make sure the same map is being received.
+
+5. Flight
+    - Test take-off and landing.
+    - Test planning without physical obstacles.
+    - Test planning with physical obstacles.
+
+## Bill of materials
+1. Turn on Vicon computer. Make sure vicon software is up and running.
+2. Batteries x 5 (charged).
+3. Laptop (charged).
+4. Radio Controller (Charged).
+5. Drones x 2.
+6. Huge monitor for presentation plugged to Laptop.
+
+## Set-up 
 1. Make sure drone is connected to the right wifi network
 ```bash
 sudo nmcli dev wifi connect "wifi_name"
@@ -30,7 +54,7 @@ uav_startup 1
 ```bash 
 cd_scripts && cd vicon
 ./vicon_central.sh
-```
+```s
 
 ### Commands
 ```bash
@@ -50,7 +74,7 @@ scp -r /home/john/gestelt_ws/src/gestelt/gestelt_bringup/ rock@192.168.31.205:/h
 scp -r /home/john/gestelt_ws/src/gestelt/gestelt_bringup/ rock@192.168.31.150:/home/rock/gestelt_ws/src/gestelt/
 ```
 
-# Demo Preparation tests
+# Simulation tests
 
 ## On central computer
 ```bash
@@ -65,8 +89,3 @@ cd_scripts && cd demo
 ./gz_sim_single_uav_demo_off_0.sh
 ./gz_sim_single_uav_demo_off_1.sh
 ```
-
-## Connection tests
-1. Make sure self IP is correct
-2. Can connect to FCU via Mavros?
-

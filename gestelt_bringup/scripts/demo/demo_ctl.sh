@@ -28,9 +28,9 @@ CMD_0="
 roslaunch gestelt_bringup sitl_central.launch rviz_config:=gz_sim cloud_topic_downsample_in:=camera/depth/points_fake
 "
 
-CMD_1="roslaunch gestelt_bringup gazebo.launch world_name:=$SCRIPT_DIR/../simulation/worlds/empty.world "
+CMD_1="roslaunch --wait gestelt_bringup gazebo.launch world_name:=$SCRIPT_DIR/../simulation/worlds/empty.world "
 
-CMD_2="roslaunch gestelt_bringup demo_fake_drone.launch"
+CMD_2="roslaunch --wait gestelt_bringup demo_fake_drone.launch"
 
 CMD_3="roslaunch gestelt_bringup vicon_multi_misson.launch"
 

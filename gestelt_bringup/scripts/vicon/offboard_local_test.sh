@@ -24,6 +24,10 @@ source $SCRIPT_DIR/../../../../devel/setup.bash &&
 #####
 # Commands
 #####
+CMD_HOST="
+roscore
+"
+
 CMD_0="
 roslaunch --wait gestelt_bringup offboard_ego_planner.launch drone_id:=${uav_id} POSE_TYPE:=3 SENSOR_TYPE:=1
 "
@@ -45,6 +49,7 @@ then
     tmux split-window -t $SESSION:0.1 -h
     tmux split-window -t $SESSION:0.0 -h
 
+    tmux send-keys -t $SESSION:0.3 "$SOURCE_WS $CMD_HOST" C-m 
     tmux send-keys -t $SESSION:0.0 "$SOURCE_WS $CMD_0" C-m 
     tmux send-keys -t $SESSION:0.1 "$SOURCE_WS $CMD_1" C-m 
     tmux send-keys -t $SESSION:0.2 "$SOURCE_WS $CMD_2" C-m 

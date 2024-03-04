@@ -31,7 +31,9 @@ mkdir -p ~/gestelt_ws/src/
 cd ~/gestelt_ws/src
 git clone https://github.com/JohnTGZ/gestelt.git
 cd gestelt
+# Import simulators
 vcs import < simulators.repos --recursive
+# Import third party packages
 vcs import < thirdparty.repos --recursive
 ```
 
