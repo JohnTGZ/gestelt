@@ -29,15 +29,15 @@ roscore
 "
 
 CMD_0="
-roslaunch gestelt_bringup offboard_ego_planner.launch drone_id:=${uav_id} POSE_TYPE:=3 SENSOR_TYPE:=1
+roslaunch --wait gestelt_bringup offboard_ego_planner.launch drone_id:=${uav_id} POSE_TYPE:=3 SENSOR_TYPE:=1
 "
 
 CMD_1="
-roslaunch gestelt_bringup offboard_px4.launch drone_id:=${uav_id} 
+roslaunch --wait gestelt_bringup offboard_px4.launch drone_id:=${uav_id} 
 "
 
 CMD_2="
-roslaunch gestelt_bringup offboard_fake_map.launch drone_id:=${uav_id} 
+roslaunch --wait gestelt_bringup offboard_fake_map.launch drone_id:=${uav_id} 
 "
 
 if [ "$SESSIONEXISTS" = "" ]
@@ -50,11 +50,8 @@ then
     tmux split-window -t $SESSION:0.0 -h
 
     tmux send-keys -t $SESSION:0.3 "$SOURCE_WS $CMD_HOST" C-m 
-    sleep 3
     tmux send-keys -t $SESSION:0.0 "$SOURCE_WS $CMD_0" C-m 
-    sleep 4
     tmux send-keys -t $SESSION:0.1 "$SOURCE_WS $CMD_1" C-m 
-    sleep 4
     tmux send-keys -t $SESSION:0.2 "$SOURCE_WS $CMD_2" C-m 
 fi
 
