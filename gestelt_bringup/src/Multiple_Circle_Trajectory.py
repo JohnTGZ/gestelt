@@ -204,8 +204,8 @@ def main():
     # side length 5m
     g=-9.81 #m/s^2  # down force, negative
     f=1*(-g) #N  # up force, positive
-    angle_1=35
-    angle_2=-60
+    # angle_1=90
+    # angle_2=-60
     angle_rad_1=math.radians(angle_1)
     angle_rad_2=math.radians(angle_2)
     num_passes = 3 
@@ -215,13 +215,13 @@ def main():
         # waypoints are under the map frame, will be transformed to world frame
     for i in range(num_passes):
 
-        waypoints.append(create_pose(1.8,-1.8,1.8))  
-        waypoints.append(create_pose(1.8, 1.5,1.0))   
+        waypoints.append(create_pose(1.5,-1.8,1.8))  
+        waypoints.append(create_pose(1.5, 1.5,1.0))   
 
         waypoints.append(create_pose(0.0, 0.15,1.4))  
-
-        waypoints.append(create_pose(-1.8,-1.8,1.8)) 
-        waypoints.append(create_pose(-1.8,1.5,1.0))  
+ 
+        waypoints.append(create_pose(-1.5,-1.8,1.8)) 
+        waypoints.append(create_pose(-1.5,1.5,1.0))  
           
 
         
@@ -230,9 +230,8 @@ def main():
         accel_list.append(create_accel(None,None,None))
 
         accel_list.append(create_accel(None,None,None))
+        # accel_list.append(create_accel(0.0,f*math.sin(angle_rad_1),g+f*math.cos(angle_rad_1))) 
 
-        
-        # accel_list.append(create_accel(0.0,f*math.sin(angle_rad_1),g+f*math.cos(angle_rad_1)))  
         accel_list.append(create_accel(None,None,None)) 
         accel_list.append(create_accel(None,None,None))
         # accel_list.append(create_accel(-f*math.sin(angle_rad_2),0.0,g+f*math.cos(angle_rad_2))) #for 2 angles on different gates
