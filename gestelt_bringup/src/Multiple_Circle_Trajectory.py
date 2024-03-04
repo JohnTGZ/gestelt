@@ -204,7 +204,7 @@ def main():
     # side length 5m
     g=-9.81 #m/s^2  # down force, negative
     f=1*(-g) #N  # up force, positive
-    angle_1=85
+    angle_1=35
     angle_2=-60
     angle_rad_1=math.radians(angle_1)
     angle_rad_2=math.radians(angle_2)
@@ -215,26 +215,40 @@ def main():
         # waypoints are under the map frame, will be transformed to world frame
     for i in range(num_passes):
 
-        waypoints.append(create_pose(1.8,0.0,1.5))   
-        waypoints.append(create_pose(0.0,-1.8,1.4)) 
-        waypoints.append(create_pose(-1.8, 0.0, 1.8))
-        waypoints.append(create_pose(0.0,1.8,1.4))
+        waypoints.append(create_pose(1.8,-1.8,1.8))  
+        waypoints.append(create_pose(1.8, 1.5,1.0))   
+
+        waypoints.append(create_pose(0.0, 0.15,1.4))  
+
+        waypoints.append(create_pose(-1.8,-1.8,1.8)) 
+        waypoints.append(create_pose(-1.8,1.5,1.0))  
+          
+
         
-    
-        accel_list.append(create_accel(-f*math.sin(angle_rad_1),0.0,g+f*math.cos(angle_rad_1)))   
+        # accel_list.append(create_accel(0.0,f*math.sin(angle_rad_1),g+f*math.cos(angle_rad_1))) 
+        accel_list.append(create_accel(None,None,None))  
         accel_list.append(create_accel(None,None,None))
+
+        accel_list.append(create_accel(None,None,None))
+
+        
+        # accel_list.append(create_accel(0.0,f*math.sin(angle_rad_1),g+f*math.cos(angle_rad_1)))  
+        accel_list.append(create_accel(None,None,None)) 
         accel_list.append(create_accel(None,None,None))
         # accel_list.append(create_accel(-f*math.sin(angle_rad_2),0.0,g+f*math.cos(angle_rad_2))) #for 2 angles on different gates
-        accel_list.append(create_accel(None,None,None))
+        # accel_list.append(create_accel(None,None,None))
 
 
         # velocites constraint
         vel_list.append(create_vel(None,None,None))
         vel_list.append(create_vel(None,None,None))
+
+        vel_list.append(create_vel(None,None,None))
+
         vel_list.append(create_vel(None,None,None))
         vel_list.append(create_vel(None,None,None))
 
-    
+    # waypoints.append(create_pose(-0.0,1.5,1.0))  
     # end of the trajectory
 
     pub_waypoints(waypoints,accel_list,vel_list)
