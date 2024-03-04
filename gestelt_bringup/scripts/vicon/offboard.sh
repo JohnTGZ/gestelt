@@ -50,7 +50,7 @@ then
     tmux split-window -t $SESSION:0.0 -h
 
     tmux send-keys -t $SESSION:0.3 "$SOURCE_WS $CMD_HOST" C-m 
-    sleep 1
+    sleep 3
     tmux send-keys -t $SESSION:0.0 "$SOURCE_WS $CMD_0" C-m 
     sleep 4
     tmux send-keys -t $SESSION:0.1 "$SOURCE_WS $CMD_1" C-m 
