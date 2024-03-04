@@ -124,8 +124,9 @@ alias sws="source devel/setup.bash"
 alias sbash="source /home/rock/.bashrc"
 
 # Multi-machine ROS communication
-export MASTER_IP=192.168.31.173
+export MASTER_IP=192.168.31.22
 export SELF_IP=192.168.31.166
+# Enable below for testing FCU connection. Comment when running actual flight.
 #export MASTER_IP=localhost
 #export SELF_IP=localhost
 
@@ -133,13 +134,21 @@ export ROS_MASTER_URI=http://$MASTER_IP:11311
 export ROS_HOSTNAME=$SELF_IP
 export ROS_IP=$SELF_IP
 
+# Startup for demo
+alias uav_startup="cd_scripts && cd vicon && ./offboard.sh 0"
+
 # Convenience function
 alias ez_pull="git -C ~/gestelt_ws/src/gestelt/ pull"
 alias ez_config="cd ~/gestelt_ws && catkin config --blacklist global_planner swarm_bridge trajectory_planner rviz_plugins swarm_benchmark geometric_controller trajectory_publisher mav_comm mav_planning_msgs mavros_controllers mav_trajectory_generation_ros mav_trajectory_generation mav_trajectory_generation_example radxa_utils mavros_trajectory_tracking controller_msgs mav_visualization eigen_checks glog_catkin eigen_catkin catkin_simple mav_msgs  mav_state_machine_msgs mav_system_msgs nlopt"
 alias ez_build="cd ~/gestelt_ws && catkin build"
 alias cd_scripts="cd /home/rock/gestelt_ws/src/gestelt/gestelt_bringup/scripts/"
-alias check_network_priority="nmcli -f NAME,UUID,AUTOCONNECT,AUTOCONNECT-PRIORITY c"
-alias uav_startup="cd_scripts && cd vicon && ./offboard.sh 0"
-alias restart_ntp="sudo service ntp stop && sudo ntpd -gq && sudo service ntp start"
 alias killbill="killall -9 rosmaster; tmux kill-server;"
 
+# Time
+alias restart_ntp="sudo service ntp stop && sudo ntpd -gq && sudo service ntp start"
+
+# Network connection
+alias set_network_priority="nmcli connection modify WIFINAME connection.autoconnect-priority N"
+alias check_network_priority="nmcli -f NAME,UUID,AUTOCONNECT,AUTOCONNECT-PRIORITY c"
+alias connect_xiaomi="sudo nmcli dev wifi connect \"Xiaomi_84CE_5G\""
+alias connect_oppenheimer="sudo nmcli dev wifi connect \"oppenheimer\""
