@@ -642,27 +642,6 @@ void GridMap::publishCollisionSphere(
 
 bool GridMap::getOccupancy(const Eigen::Vector3d &pos)
 {
-
-  /* Octree */
-
-  // // If not in map or not in octree bounding box. return -1 
-  // if (!isInGlobalMap(pos)){
-  //   return -1;
-  // }
-
-  // octomap::point3d octo_pos(pos(0), pos(1), pos(2));
-  // octomap::OcTreeNode* node = octree_->search(octo_pos);
-  // if (node == NULL){
-  //   // Return 0 if node is not occupied
-  //   return 0;
-  // }
-  // if (octree_->isNodeOccupied(node)){
-  //   return 1;
-  // }
-
-  // // Return 0 if node is not occupied
-  // return 0;
-
   /* Bonxai */
 
   // If not in map or not in octree bounding box. return -1 
@@ -722,26 +701,26 @@ bool GridMap::getInflateOccupancy(const Eigen::Vector3d &pos, const double& infl
 
 bool GridMap::isInGlobalMap(const Eigen::Vector3d &pos)
 {
-  if (pos(0) <= -mp_.global_map_size_(0)/2 || pos(0) >= mp_.global_map_size_(0)/2
-    || pos(1) <= -mp_.global_map_size_(1)/2 || pos(1) >= mp_.global_map_size_(1)/2
-    || pos(2) <= -mp_.global_map_size_(2)/2 || pos(2) >= mp_.global_map_size_(2)/2)
+  if (pos(0) > -mp_.global_map_size_(0)/2 && pos(0) < mp_.global_map_size_(0)/2
+    && pos(1) > -mp_.global_map_size_(1)/2 && pos(1) < mp_.global_map_size_(1)/2
+    && pos(2) > -mp_.global_map_size_(2)/2 && pos(2) < mp_.global_map_size_(2)/2)
   {
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 bool GridMap::isInLocalMap(const Eigen::Vector3d &pos)
 {
-  if (pos(0) <= md_.local_map_min_(0) || pos(0) >= md_.local_map_max_(0)
-    || pos(1) <= md_.local_map_min_(1) || pos(1) >= md_.local_map_max_(1)
-    || pos(2) <= md_.local_map_min_(2) || pos(2) >= md_.local_map_max_(2))
+  if (pos(0) > -md_.local_map_min_(0)/2 && pos(0) < md_.local_map_min_(0)/2
+    && pos(1) > -md_.local_map_min_(1)/2 && pos(1) < md_.local_map_min_(1)/2
+    && pos(2) > -md_.local_map_min_(2)/2 && pos(2) < md_.local_map_min_(2)/2)
   {
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 bool GridMap::withinObsRadius(const Eigen::Vector3d &pos, const double& radius)

@@ -147,7 +147,7 @@ private:
   PriorityQueue<PosIdx, double> open_list_; // Min priority queue 
   std::unordered_set<PosIdx> closed_list_; // All closed nodes
 
-  std::unique_ptr<OccMap> occ_map_;
+  // std::unique_ptr<OccMap> occ_map_;
 };
 
 #endif // _A_STAR_PLANNER_H_

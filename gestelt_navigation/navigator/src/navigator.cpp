@@ -21,6 +21,8 @@ void Navigator::init(ros::NodeHandle &nh, ros::NodeHandle &pnh)
   visualization_ = std::make_shared<ego_planner::PlanningVisualization>(nh);
 
   // Initialize front end planner 
+  // front_end_planner_ = std::make_unique<AStarPlanner>(map_, astar_params_);
+  // front_end_planner_->addVizPublishers(closed_list_viz_pub_);
   front_end_planner_ = std::make_unique<AStarPlanner>(map_, astar_params_);
   front_end_planner_->addVizPublishers(closed_list_viz_pub_);
 

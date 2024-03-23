@@ -1,7 +1,5 @@
 #include <global_planner/a_star.h>
 
-#define L2_cost
-
 AStarPlanner::AStarPlanner(std::shared_ptr<GridMap> grid_map, const AStarParams& astar_params):
     astar_params_(astar_params)
 {

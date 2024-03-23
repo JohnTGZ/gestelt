@@ -154,43 +154,6 @@ public:
 
   void readROSParams(ros::NodeHandle &nh, ros::NodeHandle &pnh);
 
-  /* Gridmap operation methods */
-
-  // True if given GLOBAL position is within the GLOBAL map boundaries, else False
-  bool isInGlobalMap(const Eigen::Vector3d &pos);
-
-  // True if given GLOBAL position is within the LOCAL map boundaries, else False
-  bool isInLocalMap(const Eigen::Vector3d &pos);
-
-  // Get occupancy value of given position in Occupancy grid
-  bool getOccupancy(const Eigen::Vector3d &pos);
-
-  // Get occupancy value of given position in inflated Occupancy grid
-  bool getInflateOccupancy(const Eigen::Vector3d &pos);
-
-  bool getInflateOccupancy(const Eigen::Vector3d &pos, const double& inflation);
-
-  /**
-   * @brief Get the Nearest Occupied Cell  
-   * 
-   * @param pos 
-   * @param occ_nb 
-   * @param radius 
-   * @return true 
-   * @return false 
-   */
-  bool getNearestOccupiedCell(const Eigen::Vector3d &pos, Eigen::Vector3d& occ_nb, double& dist_to_nearest_nb); 
-
-  /**
-   * @brief Check if position is within a radius of an obstacle
-   * 
-   * @param pos 
-   * @param radius 
-   * @return true 
-   * @return false 
-   */
-  bool withinObsRadius(const Eigen::Vector3d &pos, const double& radius);
-
   /* Gridmap conversion methods */
 
   // Get camera-to-global frame transformation
@@ -220,13 +183,6 @@ public:
   // Checks if camera pose is valid
   bool isPoseValid();
 
-
-  /** Getter methods */
-
-  double getInflation() const{
-    return mp_.inflation_;
-  }
-
   /** Publisher methods */
 
   /**
@@ -253,6 +209,9 @@ public:
 
   // Get number of voxels
   Eigen::Vector3i getGlobalMapNumVoxels() const { return mp_.global_map_num_voxels_; }
+
+  // Get inflation value
+  double getInflation() const{ return mp_.inflation_; }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -290,32 +249,6 @@ private:
   // Subscriber callback to point cloud and TF
   void cloudTFCB(const sensor_msgs::PointCloud2ConstPtr &msg_pc);
 
-  /**
-   * Read methods
-  */
-
-  // /**
-  //  * @brief Load a point cloud map from a PCD file 
-  //  * 
-  //  * @param file 
-  //  */
-  // void loadPCDFile(const std::string& file)
-  // {
-  //   pcl::PointCloud<pcl::PointXYZ>::Ptr pcd;
-
-  //   if (pcl::io::loadPCDFile<pcl::PointXYZ> (file, *pcd) == -1) //* load the file
-  //   {
-  //     throw std::runtime_error("Couldn't read file " + file);
-  //   }
-    
-  //   std::cout << "Loaded point clouds of size " 
-  //             << pcd->width << " * " 
-  //             << pcd->height << " with size "
-  //             << pcd->size() <<std::endl;
-
-  //   pcdToMap(pcd);
-  // }
-  
   /**
    * Timer Callbacks
   */
@@ -384,7 +317,121 @@ private:
   // pcl::VoxelGrid<pcl::PointXYZ> vox_grid_filter_; // Voxel filter
 
   double col_warn_radius_, col_fatal_radius_; // collision check radius
-};
+
+
+// Frequently used methods
+public:
+
+  /* Gridmap operation methods */
+
+  // True if given GLOBAL position is within the GLOBAL map boundaries, else False
+  bool isInGlobalMap(const Eigen::Vector3d &pos);
+
+  // True if given GLOBAL position is within the LOCAL map boundaries, else False
+  bool isInLocalMap(const Eigen::Vector3d &pos);
+
+  // Get occupancy value of given position in Occupancy grid
+  bool getOccupancy(const Eigen::Vector3d &pos);
+
+  // Get occupancy value of given position in inflated Occupancy grid
+  bool getInflateOccupancy(const Eigen::Vector3d &pos);
+
+  bool getInflateOccupancy(const Eigen::Vector3d &pos, const double& inflation);
+
+  /**
+   * @brief Get the Nearest Occupied Cell  
+   * 
+   * @param pos 
+   * @param occ_nb 
+   * @param radius 
+   * @return true 
+   * @return false 
+   */
+  bool getNearestOccupiedCell(const Eigen::Vector3d &pos, Eigen::Vector3d& occ_nb, double& dist_to_nearest_nb); 
+
+  /**
+   * @brief Check if position is within a radius of an obstacle
+   * 
+   * @param pos 
+   * @param radius 
+   * @return true 
+   * @return false 
+   */
+  bool withinObsRadius(const Eigen::Vector3d &pos, const double& radius);
+
+  // Convert from actual position to index coordinates
+  Eigen::Vector3d GetCoordLocal(const Eigen::Vector3d& pos) {
+    return (pos - getOrigin()) / getResolution();
+  }
+
+  // Convert from index coordinates to actual position
+  Eigen::Vector3d GetCoordGlobal(const Eigen::Vector3i& idx){
+    Eigen::Vector3d pos = idx.cast<double>() * getResolution() + getOrigin();
+    return pos;
+  }
+
+  Eigen::Vector3d GetCoordGlobal(const Eigen::Vector3d& idx){
+    return idx * getResolution() + getOrigin();
+  }
+
+  // Check if current index is free
+  bool IsFree(const Eigen::Vector3i& idx) {
+    // TODO: Change to reflect if it is free or unknown
+    return !IsOccupied(idx);
+  }
+
+  // Check if current index is occupied
+  bool IsOccupied(const Eigen::Vector3i& idx) {
+    return getInflateOccupancy(GetCoordGlobal(idx));
+  }
+
+  // Check if current index is occupied
+  bool IsOccupied(const Eigen::Vector3d& idx_dbl) {
+    Eigen::Vector3i idx_int = idx_dbl.cast<int>();
+    return getInflateOccupancy(GetCoordGlobal(idx_int));
+  }
+
+  // Check if index is within map bounds
+  bool IsInsideGridInt(const Eigen::Vector3i& idx) {
+    if (idx(0) > -mp_.global_map_num_voxels_(0)/2 && idx(0) < mp_.global_map_num_voxels_(0)/2
+      && idx(1) > -mp_.global_map_num_voxels_(1)/2 && idx(1) < mp_.global_map_num_voxels_(1)/2
+      && idx(2) > -mp_.global_map_num_voxels_(2)/2 && idx(2) < mp_.global_map_num_voxels_(2)/2)
+    {
+      return true;
+    }
+    return false;
+  }
+
+  // Check if index is within map bounds
+  bool IsInsideGridInt(const Eigen::Vector3d& idx_dbl) {
+    Eigen::Vector3i idx_int = idx_dbl.cast<int>();
+
+    if (idx_int(0) > -mp_.global_map_num_voxels_(0)/2 && idx_int(0) < mp_.global_map_num_voxels_(0)/2
+      && idx_int(1) > -mp_.global_map_num_voxels_(1)/2 && idx_int(1) < mp_.global_map_num_voxels_(1)/2
+      && idx_int(2) > -mp_.global_map_num_voxels_(2)/2 && idx_int(2) < mp_.global_map_num_voxels_(2)/2)
+    {
+      return true;
+    }
+    return false;
+  }
+
+  // Get occupancy value from index coordinates
+  int GetVoxelInt(const Eigen::Vector3d& idx) {
+    Eigen::Vector3i idx_int = idx.cast<int>();
+    if (!IsInsideGridInt(idx_int)){
+      return -1; // outside map
+    }
+
+    if (withinObsRadius(GetCoordGlobal(idx_int), mp_.inflation_)){
+      return 1; // occupied 
+    }
+
+    return 0; // Free 
+  }
+  
+}; // class GridMap
+
+
 
 
 #endif //_GRID_MAP_H

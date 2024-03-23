@@ -206,7 +206,6 @@ struct PosIdx {
   int x, y, z;
 }; // struct PosIdx
 
-
 template <> 
 struct std::hash<PosIdx> {
   /* implement hash function so we can put PosIdx into an unordered_set */
@@ -261,32 +260,6 @@ public:
       -1, -1,  -1;// Btm Bck Right 
 
   }
-
-  // /**
-  //  * @brief Get the Neighbors Idx object
-  //  * 
-  //  * @param cur_node 
-  //  * @param neighbors 
-  //  * @param nb_8con_idxs Index of 8 con neighbor lookup
-  //  */
-  // void getNeighbors(OccNodePtr cur_node, std::vector<OccNodePtr>& neighbors, std::vector<int>& nb_8con_idxs){
-  //   neighbors.clear();
-  //   nb_8con_idxs.clear();
-
-  //   for (int i = 0; i < nb_idx_8con_.rows(); i++){
-  //     Eigen::Vector3i nb_3d_idx = cur_node->idx + nb_idx_8con_.row(i).transpose();
-  //                                 // + Eigen::Vector3i{nb_idx_8con_.row(i)(0), nb_idx_8con_.row(i)(1), nb_idx_8con_.row(i)(2)};
-
-  //     if (getOccupancy(nb_3d_idx)){
-  //       // Skip if current index is occupied
-  //       continue;
-  //     }
-
-  //     neighbors.push_back(std::make_shared<OccNode>(nb_3d_idx));
-  //     nb_8con_idxs.push_back(i);
-  //   }
-
-  // }
 
   void getNeighbours(const PosIdx& cur_node, std::vector<PosIdx>& neighbours) {
 
@@ -439,8 +412,6 @@ public:
 };
 
 
-
-
 // Get euclidean distance between node_1 and node_2
 // NOTE: This is in units of indices
 inline double getL1Norm(const PosIdx& a, const PosIdx& b) {
@@ -474,32 +445,5 @@ inline double getOctileDist(const PosIdx& a, const PosIdx& b)  {
 
   return (dx + dy + dz) + (SQRT2 - 2) * std::min(dx, std::min(dy, dz)); 
 }
-
-// ??? 
-// double getDiagCost(OccNodePtr node_1, OccNodePtr node_2) {
-//   double dx = abs(node_1->idx(0) - node_2->idx(0));
-//   double dy = abs(node_1->idx(1) - node_2->idx(1));
-//   double dz = abs(node_1->idx(2) - node_2->idx(2));
-
-//   double h = 0.0;
-//   int diag = std::min(std::min(dx, dy), dz);
-//   dx -= diag;
-//   dy -= diag;
-//   dz -= diag;
-
-//   if (dx == 0)
-//   {
-//     h = 1.0 * sqrt(3.0) * diag + sqrt(2.0) * std::min(dy, dz) + 1.0 * abs(dy - dz);
-//   }
-//   if (dy == 0)
-//   {
-//     h = 1.0 * sqrt(3.0) * diag + sqrt(2.0) * std::min(dx, dz) + 1.0 * abs(dx - dz);
-//   }
-//   if (dz == 0)
-//   {
-//     h = 1.0 * sqrt(3.0) * diag + sqrt(2.0) * std::min(dx, dy) + 1.0 * abs(dx - dy);
-//   }
-//   return h;
-// }
 
 #endif // _PLANNER_COMMON_H_

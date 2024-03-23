@@ -18,6 +18,7 @@
   <!-- <depend>cv_bridge</depend> -->
   <depend>geometry_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>path_finding_util</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
