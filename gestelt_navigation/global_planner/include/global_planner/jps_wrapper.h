@@ -1,12 +1,18 @@
-#ifndef _A_STAR_PLANNER_H_
-#define _A_STAR_PLANNER_H_
+#ifndef _JPSWRAPPER_H_
+#define _JPSWRAPPER_H_
 
-#include <jps.hpp>
+// #include <jps.hpp>
+
+// #include <path_finding_util/global_planner.hpp>
+
+#include <path_finding_util/jps_planner/distance_map_planner/distance_map_planner.h>
+#include <path_finding_util/jps_planner/jps_planner/jps_planner.h>
+
 #include <ros/ros.h>
 
-#include <chrono>
+// #include <chrono>
 
-class JPS : public PlannerBase
+class JPSWrapper
 {
 public:
 
@@ -17,7 +23,7 @@ public:
     int cost_function_type; // Type of cost function to use
   }; // struct SphericalSFCParams
 
-  JPS(std::shared_ptr<GridMap> map, const JPSParams& jps_params);
+  JPSWrapper(std::shared_ptr<GridMap> map, const JPSParams& jps_params);
 
   /**
    * @brief Clear closed, open list and reset planning_successful flag for new plan generation
@@ -46,10 +52,14 @@ private:
   std::vector<Eigen::Vector3d> path_pos_; // Path in terms of 3d position
 
   /* Params */
-  // const double tie_breaker_ = 1.0 + 1.0 / 10000; 
+  bool planner_verbose_ = true;
   JPSParams jps_params_;
 
   std::shared_ptr<GridMap> map_;
-};
 
-#endif // _A_STAR_PLANNER_H_
+  // std::shared_ptr<path_finding_util::GraphSearch> jps_planner_;
+  std::shared_ptr<JPSPlanner3D> jps_planner_;
+
+}; // class JPSWrapper
+
+#endif // _JPSWRAPPER_H_

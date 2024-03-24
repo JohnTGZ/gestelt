@@ -25,21 +25,41 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/message_filter.h>
 
-#include <octomap/octomap.h>
-#include <octomap/OcTree.h>
-
 #include <bonxai/bonxai.hpp>
 #include <bonxai/pcl_utils.hpp>
 #include <bonxai/probabilistic_map.hpp>
 
+
+///Pre-allocated std::vector for Eigen using vec_E
+template <typename T>
+using vec_E = std::vector<T, Eigen::aligned_allocator<T>>;
+///Eigen 1D float vector of size N
+template <int N>
+using Vecf = Eigen::Matrix<double, N, 1>;
+///Eigen 1D int vector of size N
+template <int N>
+using Veci = Eigen::Matrix<int, N, 1>;
+///Eigen 1D float vector of dynamic size
+using VecDf = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+
+///Vector of Eigen 1D float vector
+template <int N>
+using vec_Vecf = vec_E<Vecf<N>>;
+///Vector of Eigen 1D int vector
+template <int N>
+using vec_Veci = vec_E<Veci<N>>;
+
 struct MappingParameters
 {
   /* map properties */
-  Eigen::Vector3d map_origin_; // Origin of map
+  Eigen::Vector3d map_origin_; // Origin of map (Set to be the origin of the starting point of the robot)
+  Eigen::Vector3i voxel_map_origin_; // Origin of voxel map
+  
   Eigen::Vector3d global_map_size_; //  Size of global occupancy map  (m)
   Eigen::Vector3d local_map_size_; //  Size of local occupancy map (m)
 
   Eigen::Vector3i global_map_num_voxels_; //  Size of global occupancy grid (no. of voxels)
+  Eigen::Vector3i local_map_num_voxels_; //  Size of local occupancy grid (no. of voxels)
 
   double resolution_; // Voxel size for occupancy grid without inflation                  
   double inflation_; // Voxel size for occupancy grid with inflation
@@ -169,12 +189,6 @@ public:
   // done here
   void depthToCloudMap(const sensor_msgs::ImageConstPtr &msg);
 
-  // Convert PCL Point cloud to Octomap
-  void pclToOctomapPC(const pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud , octomap::Pointcloud& octomap_cloud);
-  
-  // Retrieve occupied cells in Octree as a PCL Point cloud
-  void octreeToPclPC(std::shared_ptr<octomap::OcTree> tree, pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud);
-
   // Update the local map
   void updateLocalMap();
 
@@ -199,16 +213,21 @@ public:
   /** Getter methods */
 
   // Get occupancy grid resolution
-  double getResolution() { return mp_.resolution_; }
+  double getRes() { return mp_.resolution_; }
 
   // Get map origin
   Eigen::Vector3d getOrigin() { return mp_.map_origin_; }
 
+  Eigen::Vector3i getVoxelOrigin() { return mp_.voxel_map_origin_; }
+
   // Get odometry depth timeout
   bool getPoseDepthTimeout() { return md_.flag_sensor_timeout_; }
 
-  // Get number of voxels
+  // Get number of voxels in global map
   Eigen::Vector3i getGlobalMapNumVoxels() const { return mp_.global_map_num_voxels_; }
+
+  // Get number of voxels in local map
+  Eigen::Vector3i getLocalMapNumVoxels() const { return mp_.local_map_num_voxels_; }
 
   // Get inflation value
   double getInflation() const{ return mp_.inflation_; }
@@ -312,8 +331,6 @@ private:
   
   std::shared_ptr<KD_TREE<pcl::PointXYZ>> kdtree_; // KD-Tree 
 
-  // std::shared_ptr<octomap::OcTree> octree_; // Octree data structure
-
   // pcl::VoxelGrid<pcl::PointXYZ> vox_grid_filter_; // Voxel filter
 
   double col_warn_radius_, col_fatal_radius_; // collision check radius
@@ -333,9 +350,10 @@ public:
   // Get occupancy value of given position in Occupancy grid
   bool getOccupancy(const Eigen::Vector3d &pos);
 
-  // Get occupancy value of given position in inflated Occupancy grid
+  // Get occupied bool of given position in inflated Occupancy grid
   bool getInflateOccupancy(const Eigen::Vector3d &pos);
 
+  // Get occupied bool of given position in occ grid with specified inflation
   bool getInflateOccupancy(const Eigen::Vector3d &pos, const double& inflation);
 
   /**
@@ -359,78 +377,161 @@ public:
    */
   bool withinObsRadius(const Eigen::Vector3d &pos, const double& radius);
 
-  // Convert from actual position to index coordinates
-  Eigen::Vector3d GetCoordLocal(const Eigen::Vector3d& pos) {
-    return (pos - getOrigin()) / getResolution();
+  // Check if current index is free
+  bool isFree(const Eigen::Vector3i& idx) {
+    return !isOccupied(idx);
+
+    // if (!isInGlobalVoxelMap(idx)){
+    //   std::cout << "isFree (" << idx.transpose() <<") NOT in global voxel map which has size " << mp_.global_map_num_voxels_.transpose() << std::endl;
+    //   return false;
+    // }
+
+    // Eigen::Vector3d pos = intToFloat(idx);
+    // Bonxai::CoordT coord = bonxai_map_->grid().posToCoord(pos(0), pos(1), pos(2));
+
+    // std::cout << "bonxai_map_->isFree( " << pos.transpose() <<  "): " << bonxai_map_->isFree(coord) << std::endl;
+    // return bonxai_map_->isFree(coord);
   }
 
-  // Convert from index coordinates to actual position
-  Eigen::Vector3d GetCoordGlobal(const Eigen::Vector3i& idx){
-    Eigen::Vector3d pos = idx.cast<double>() * getResolution() + getOrigin();
+  /// Check current index is unknown
+  bool isUnknown(const Veci<3> &idx) {
+    if (!isInGlobalVoxelMap(idx)){
+      return true;
+    }
+
+    Eigen::Vector3d pos = intToFloat(idx);
+    Bonxai::CoordT coord = bonxai_map_->grid().posToCoord(pos(0), pos(1), pos(2));
+
+    // TODO: change is isUnknown method from bonxai_map_
+    // return bonxai_map_->isUnknown(coord);
+    return bonxai_map_->isOccupied(coord);
+  }
+
+  // Check if current index is occupied
+  bool isOccupied(const Eigen::Vector3i& idx) {
+
+    if (!isInGlobalVoxelMap(idx)){
+      return true; 
+    }
+
+    Eigen::Vector3d pos = intToFloat(idx);
+    Bonxai::CoordT coord = bonxai_map_->grid().posToCoord(pos(0), pos(1), pos(2));
+
+    return bonxai_map_->isOccupied(coord);
+  }
+
+  // Check if index is within map bounds
+  bool isInLocalVoxelMap(const Eigen::Vector3i& idx) {
+    if (idx(0) >= 0 && idx(0) < mp_.local_map_num_voxels_(0)
+      && idx(1) >= 0 && idx(1) < mp_.local_map_num_voxels_(1)
+      && idx(2) >= 0 && idx(2) < mp_.local_map_num_voxels_(2))
+    {
+      return true;
+    }
+    return false;
+  }
+
+  // Check if index is within map bounds
+  bool isInGlobalVoxelMap(const Eigen::Vector3i& idx) {
+    if (idx(0) >= 0 && idx(0) < mp_.global_map_num_voxels_(0)
+      && idx(1) >= 0 && idx(1) < mp_.global_map_num_voxels_(1)
+      && idx(2) >= 0 && idx(2) < mp_.global_map_num_voxels_(2))
+    {
+      return true;
+    }
+    return false;
+  }
+
+  bool isOutside(const Eigen::Vector3i& idx){
+    return !isInGlobalVoxelMap(idx);
+  }
+  
+  /// Check if the ray from p1 to p2 is occluded
+  // TODO Remove val
+  bool isBlocked(const Vecf<3> &p1, const Vecf<3> &p2, int8_t val = 100) {
+    vec_Veci<3> pns = rayTrace(p1, p2);
+    for (const auto &pn : pns) {
+      if (isOccupied(pn)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // returns probability value of grid cell from 0.0 to 1.0
+  double getOccVal(const Eigen::Vector3i& idx)
+  {
+    if (!isInGlobalVoxelMap(idx)){
+      return 1.0;
+    }
+
+    Eigen::Vector3d pos = intToFloat(idx);
+    Bonxai::CoordT coord = bonxai_map_->grid().posToCoord(pos(0), pos(1), pos(2));
+
+    return bonxai_map_->getOccVal(coord);
+  }
+
+  /// Float position to discrete cell coordinate
+  Veci<3> floatToInt(const Eigen::Vector3d &pos) {
+    // Veci<3> pn;
+    // for (int i = 0; i < 3; i++)
+    //   pn(i) = std::round((pt(i) - getOrigin()(i)) / getRes() - 0.5);
+    // return pn;
+
+
+    // std::cout << "GridMap::floatToInt " << std::endl;
+    // std::cout << "=========" << std::endl;
+    // std::cout << "(pos): " << 
+    //   pos.transpose() << std::endl;
+    // std::cout << "(getOrigin): " << 
+    //   getOrigin().transpose() << std::endl;
+
+    // std::cout << "(pos - getOrigin()): " << 
+    //   (pos - getOrigin()).transpose() << std::endl;
+    // std::cout << "(pos - getOrigin()) / getRes(): " << 
+    //   ((pos - getOrigin()) / getRes()).transpose() << std::endl;
+
+    // std::cout << "=========" << std::endl;
+
+
+
+    // Veci<3> idx = (((pos - getOrigin()) / getRes() ) - Eigen::Vector3d::Constant(0.5)).cast<int>() ;
+    Veci<3> idx = ((pos - getOrigin()) / getRes() ).cast<int>() ;
+    return idx;
+  }
+
+  /// Discrete cell coordinate to float position
+  Eigen::Vector3d intToFloat(const Veci<3> &idx) {
+    // return (idx.template cast<double>() + Vecf<3>::Constant(0.5)) * getRes() + getOrigin();
+
+    // Eigen::Vector3d pos = (idx.cast<double>() + Eigen::Vector3d::Constant(0.5))  * getRes() + getOrigin();
+    Eigen::Vector3d pos = (idx.cast<double>())  * getRes() + getOrigin();
     return pos;
   }
 
-  Eigen::Vector3d GetCoordGlobal(const Eigen::Vector3d& idx){
-    return idx * getResolution() + getOrigin();
-  }
+  /// Raytrace from float point pt1 to pt2
+  vec_Veci<3> rayTrace(const Vecf<3> &pt1, const Vecf<3> &pt2) {
+    Vecf<3> diff = pt2 - pt1;
+    double k = 0.8;
+    int max_diff = (diff / getRes()).template lpNorm<Eigen::Infinity>() / k;
+    double s = 1.0 / max_diff;
+    Vecf<3> step = diff * s;
 
-  // Check if current index is free
-  bool IsFree(const Eigen::Vector3i& idx) {
-    // TODO: Change to reflect if it is free or unknown
-    return !IsOccupied(idx);
-  }
-
-  // Check if current index is occupied
-  bool IsOccupied(const Eigen::Vector3i& idx) {
-    return getInflateOccupancy(GetCoordGlobal(idx));
-  }
-
-  // Check if current index is occupied
-  bool IsOccupied(const Eigen::Vector3d& idx_dbl) {
-    Eigen::Vector3i idx_int = idx_dbl.cast<int>();
-    return getInflateOccupancy(GetCoordGlobal(idx_int));
-  }
-
-  // Check if index is within map bounds
-  bool IsInsideGridInt(const Eigen::Vector3i& idx) {
-    if (idx(0) > -mp_.global_map_num_voxels_(0)/2 && idx(0) < mp_.global_map_num_voxels_(0)/2
-      && idx(1) > -mp_.global_map_num_voxels_(1)/2 && idx(1) < mp_.global_map_num_voxels_(1)/2
-      && idx(2) > -mp_.global_map_num_voxels_(2)/2 && idx(2) < mp_.global_map_num_voxels_(2)/2)
-    {
-      return true;
+    vec_Veci<3> pns;
+    Veci<3> prev_pn = Veci<3>::Constant(-1);
+    for (int n = 1; n < max_diff; n++) {
+      Vecf<3> pt = pt1 + step * n;
+      Veci<3> new_pn = floatToInt(pt);
+      if (!isInGlobalVoxelMap(new_pn))
+        break;
+      if (new_pn != prev_pn)
+        pns.push_back(new_pn);
+      prev_pn = new_pn;
     }
-    return false;
+    return pns;
   }
 
-  // Check if index is within map bounds
-  bool IsInsideGridInt(const Eigen::Vector3d& idx_dbl) {
-    Eigen::Vector3i idx_int = idx_dbl.cast<int>();
-
-    if (idx_int(0) > -mp_.global_map_num_voxels_(0)/2 && idx_int(0) < mp_.global_map_num_voxels_(0)/2
-      && idx_int(1) > -mp_.global_map_num_voxels_(1)/2 && idx_int(1) < mp_.global_map_num_voxels_(1)/2
-      && idx_int(2) > -mp_.global_map_num_voxels_(2)/2 && idx_int(2) < mp_.global_map_num_voxels_(2)/2)
-    {
-      return true;
-    }
-    return false;
-  }
-
-  // Get occupancy value from index coordinates
-  int GetVoxelInt(const Eigen::Vector3d& idx) {
-    Eigen::Vector3i idx_int = idx.cast<int>();
-    if (!IsInsideGridInt(idx_int)){
-      return -1; // outside map
-    }
-
-    if (withinObsRadius(GetCoordGlobal(idx_int), mp_.inflation_)){
-      return 1; // occupied 
-    }
-
-    return 0; // Free 
-  }
-  
 }; // class GridMap
-
 
 
 

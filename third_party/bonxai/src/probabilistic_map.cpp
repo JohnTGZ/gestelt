@@ -1,5 +1,6 @@
 #include "bonxai/probabilistic_map.hpp"
-#include <eigen3/Eigen/Geometry>
+// #include <eigen3/Eigen/Geometry>
+#include <Eigen/Eigen>
 #include <unordered_set>
 
 namespace Bonxai
@@ -89,6 +90,17 @@ bool ProbabilisticMap::isFree(const CoordT &coord) const
     return cell->probability_log < _options.occupancy_threshold_log;
   }
   return false;
+}
+
+double ProbabilisticMap::getOccVal(const CoordT &coord) const
+{
+  if(auto* cell = _accessor.value(coord, false))
+  {
+    if (cell != nullptr){
+      return ProbabilisticMap::logods(cell->probability_log);
+    }
+  }
+  return 1.0;
 }
 
 void Bonxai::ProbabilisticMap::updateFreeCells(const Vector3D& origin)

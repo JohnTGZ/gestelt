@@ -4,5 +4,10 @@ This package has 2 executables.
 - `fake_map_publisher` simply publishes the global fake map (originally a PCD file) for visualization
 There is also a `fake_laser_sim` library used by `fake_map` which simulates a 3d lidar.    
 
+# Quick start
+```bash
+roslaunch fake_map fake_map_generator.launch
+```
+
 # Acknowledgements
 The point cloud sensor simulator (named as `fake_laser_sim`) is taken from ZheJiang university's code for simulating drones

@@ -1163,7 +1163,7 @@ namespace ego_planner
     {
       Eigen::Vector3d forward_p = traj->traj.getPos(traj_t);
 
-      double reso = map->getResolution();
+      double reso = map->getRes();
       for (;; forward_p(2) -= reso)
       {
         int ret = map->getOccupancy(forward_p);

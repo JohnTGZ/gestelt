@@ -1,132 +1,159 @@
-// Graph search implementation for JPS
-#include "graph_search.hpp"
-
 #include <cmath>
+#include <path_finding_util/jps_planner/jps_planner/graph_search.h>
 
-namespace path_finding_util {
+using namespace JPS;
 
-GraphSearch::GraphSearch(const Eigen::Vector3i &dim, const double weight_heur,
-                         const bool verbose)
-    : weight_heur_(weight_heur), verbose_(verbose) {
-  dim_ = dim;
-  hm_.resize(dim_[0] * dim_[1] * dim_[2]);
-  seen_.resize(dim_[0] * dim_[1] * dim_[2], false);
+GraphSearch::GraphSearch(std::shared_ptr<GridMap> map, int xDim, int yDim, int zDim,
+                         double eps, bool verbose)
+    : map_(map), xDim_(xDim), yDim_(yDim), zDim_(zDim), eps_(eps),
+      verbose_(verbose) {
+  hm_.resize(xDim_ * yDim_ * zDim_);
+  seen_.resize(xDim_ * yDim_ * zDim_, false);
 
-  // set 3D neighbors
+  // Set 3D neighbors
   for (int x = -1; x <= 1; x++) {
     for (int y = -1; y <= 1; y++) {
       for (int z = -1; z <= 1; z++) {
         if (x == 0 && y == 0 && z == 0)
           continue;
-        ns_.push_back(Eigen::Vector3i(x, y, z));
+        ns_.push_back(std::vector<int>{x, y, z});
       }
     }
   }
   jn3d_ = std::make_shared<JPS3DNeib>();
 }
 
-inline int GraphSearch::CoordToId(const Eigen::Vector3i &coord) const {
-  return coord[0] + coord[1] * dim_[0] + coord[2] * dim_[0] * dim_[1];
+inline int GraphSearch::coordToId(int x, int y, int z) const {
+  Eigen::Vector3i idx = Eigen::Vector3i(x,y,z) - map_->getVoxelOrigin();
+  return idx(0) + idx(1) * xDim_ + idx(2) * xDim_ * yDim_;
 }
 
-inline double GraphSearch::GetHeur(const Eigen::Vector3i &pt) const {
-  return weight_heur_ * (Eigen::Vector3d(pt(0), pt(1), pt(2)) -
-                         Eigen::Vector3d(goal_(0), goal_(1), goal_(2)))
-                            .norm();
+inline bool GraphSearch::isFree(int x, int y, int z) const {
+
+  return map_->isFree(Eigen::Vector3i{x, y, z});
 }
 
-bool GraphSearch::Plan(const std::shared_ptr<GridMap> vg,
-                       const Eigen::Vector3i &start,
-                       const Eigen::Vector3i &goal, const bool use_jps,
-                       const int max_expand, const bool use_apf,
-                       const double apf_coeff, const unsigned int apf_degree,
-                       const unsigned int apf_dist) {
-  // set voxel grid
-  vg_ = vg;
 
-  // clear priority queue and path
+inline bool GraphSearch::isOccupied(int x, int y, int z) const {
+
+  return map_->isOccupied(Eigen::Vector3i{x, y, z});
+}
+
+
+inline double GraphSearch::getHeur(int x, int y, int z) const {
+  return eps_ *
+         std::sqrt((x - xGoal_) * (x - xGoal_) + (y - yGoal_) * (y - yGoal_) +
+                   (z - zGoal_) * (z - zGoal_));
+}
+
+
+bool GraphSearch::plan(int xStart, int yStart, int zStart, int xGoal, int yGoal,
+                       int zGoal, bool useJps, int maxExpand) {
+
+  auto a = std::chrono::high_resolution_clock::now();
+
   pq_.clear();
   path_.clear();
+  hm_.resize(xDim_ * yDim_ * zDim_);
+  seen_.resize(xDim_ * yDim_ * zDim_, false);
 
-  // set artificial potential field variables
-  use_apf_ = use_apf;
-  apf_coeff_ = apf_coeff;
-  apf_degree_ = apf_degree;
-  apf_dist_ = apf_dist;
+  // Set jps
+  use_jps_ = useJps;
 
-  // set jps
-  use_jps_ = use_jps;
-
-  // set goal
-  int goal_id = CoordToId(goal);
-  goal_ = goal;
-
-  // set start node
-  int start_id = CoordToId(start);
+  // Set goal
+  int goal_id = coordToId(xGoal, yGoal, zGoal);
+  xGoal_ = xGoal;
+  yGoal_ = yGoal;
+  zGoal_ = zGoal;
+  // Set start node
+  int start_id = coordToId(xStart, yStart, zStart);
   StatePtr currNode_ptr =
-      std::make_shared<State>(State(start_id, start, Eigen::Vector3i(0, 0, 0)));
+      std::make_shared<State>(State(start_id, xStart, yStart, zStart, 0, 0, 0));
   currNode_ptr->g = 0;
-  currNode_ptr->h = GetHeur(start);
+  currNode_ptr->h = getHeur(xStart, yStart, zStart);
 
-  return Plan(currNode_ptr, max_expand, start_id, goal_id);
+  auto b = std::chrono::high_resolution_clock::now();
+  double plan_dur = std::chrono::duration_cast<std::chrono::duration<double>>(
+            b - a).count() * 1000.0;
+            
+  std::cout << "GraphSearch::plan setup duration: "<< plan_dur << " s" << std::endl;
+
+  return plan(currNode_ptr, maxExpand, start_id, goal_id);
 }
 
-bool GraphSearch::Plan(StatePtr &curr_node_ptr, const int max_expand,
-                       const int start_id, const int goal_id) {
-  // insert start node
-  curr_node_ptr->heapkey = pq_.push(curr_node_ptr);
-  curr_node_ptr->opened = true;
-  hm_[curr_node_ptr->id] = curr_node_ptr;
-  seen_[curr_node_ptr->id] = true;
+bool GraphSearch::plan(StatePtr &currNode_ptr, int maxExpand, int start_id,
+                       int goal_id) {
+  // Insert start node
+  currNode_ptr->heapkey = pq_.push(currNode_ptr);
+  currNode_ptr->opened = true;
+  hm_[currNode_ptr->id] = currNode_ptr;
+  seen_[currNode_ptr->id] = true;
+
+  std::cout << "Before main planning loop" << std::endl;;
+
+  double getsucc_dur = 0;
+  double procsucc_dur = 0;
 
   int expand_iteration = 0;
-
   while (true) {
+    std::cout << "expand_iteration: " << expand_iteration << std::endl;;
     expand_iteration++;
     // get element with smallest cost
-    curr_node_ptr = pq_.top();
+    currNode_ptr = pq_.top();
     pq_.pop();
-    curr_node_ptr->closed = true; // Add to closed list
+    currNode_ptr->closed = true; // Add to closed list
 
-    if (curr_node_ptr->id == goal_id) {
-      path_ = RecoverPath(curr_node_ptr, start_id);
-      if (verbose_) {
-        printf("Goal Reached!!!!!!\n");
-        printf("Expand [%d] nodes!\n", expand_iteration);
-      }
+    if (currNode_ptr->id == goal_id) {
+      if (verbose_)
+        printf("Goal Reached!!!!!!\n\n");
+      break;
     }
 
     // printf("expand: %d, %d\n", currNode_ptr->x, currNode_ptr->y);
     std::vector<int> succ_ids;
     std::vector<double> succ_costs;
+    // Get successors
+    if (!use_jps_){
+      // auto getsucc_a = std::chrono::high_resolution_clock::now();
+      getSucc(currNode_ptr, succ_ids, succ_costs);
+      // getsucc_dur += std::chrono::duration_cast<std::chrono::duration<double>>(
+      //           std::chrono::high_resolution_clock::now() - getsucc_a).count() * 1000.0;
+    }
+    else{
+      auto getsucc_a = std::chrono::high_resolution_clock::now();
+      getJpsSucc(currNode_ptr, succ_ids, succ_costs);
+      getsucc_dur += std::chrono::duration_cast<std::chrono::duration<double>>(
+                std::chrono::high_resolution_clock::now() - getsucc_a).count() * 1000.0;
+    }
 
-    // get successors
-    if (!use_jps_)
-      GetSucc(curr_node_ptr, succ_ids, succ_costs);
-    else
-      GetJpsSucc(curr_node_ptr, succ_ids, succ_costs);
+    auto procsucc_a = std::chrono::high_resolution_clock::now();
 
-    // process successors
+    // if(verbose_)
+    // printf("size of succs: %zu\n", succ_ids.size());
+    // Process successors
     for (int s = 0; s < (int)succ_ids.size(); s++) {
       // see if we can improve the value of succstate
       StatePtr &child_ptr = hm_[succ_ids[s]];
-      double tentative_gval = curr_node_ptr->g + succ_costs[s];
+      double tentative_gval = currNode_ptr->g + succ_costs[s];
 
-      if (tentative_gval < child_ptr->g - 1e-6) {
-        child_ptr->parentId = curr_node_ptr->id; // assign new parent
-        child_ptr->g = tentative_gval;           // update gval
+      if (tentative_gval < child_ptr->g) {
+        child_ptr->parentId = currNode_ptr->id; // Assign new parent
+        child_ptr->g = tentative_gval;          // Update gval
+
+        // double fval = child_ptr->g + child_ptr->h;
 
         // if currently in OPEN, update
         if (child_ptr->opened && !child_ptr->closed) {
           pq_.increase(child_ptr->heapkey); // update heap
-          child_ptr->direction =
-              (child_ptr->direction - curr_node_ptr->direction);
-          if (child_ptr->direction[0] != 0)
-            child_ptr->direction[0] /= std::abs(child_ptr->direction[0]);
-          if (child_ptr->direction[1] != 0)
-            child_ptr->direction[1] /= std::abs(child_ptr->direction[1]);
-          if (child_ptr->direction[2] != 0)
-            child_ptr->direction[2] /= std::abs(child_ptr->direction[2]);
+          child_ptr->dx = (child_ptr->x - currNode_ptr->x);
+          child_ptr->dy = (child_ptr->y - currNode_ptr->y);
+          child_ptr->dz = (child_ptr->z - currNode_ptr->z);
+          if (child_ptr->dx != 0)
+            child_ptr->dx /= std::abs(child_ptr->dx);
+          if (child_ptr->dy != 0)
+            child_ptr->dy /= std::abs(child_ptr->dy);
+          if (child_ptr->dz != 0)
+            child_ptr->dz /= std::abs(child_ptr->dz);
         }
         // if currently in CLOSED
         else if (child_ptr->opened && child_ptr->closed) {
@@ -138,11 +165,14 @@ bool GraphSearch::Plan(StatePtr &curr_node_ptr, const int max_expand,
           child_ptr->opened = true;
         }
       } //
-    }   // process successors
+    }   // Process successors
 
-    if (max_expand > 0 && expand_iteration >= max_expand) {
+    procsucc_dur += std::chrono::duration_cast<std::chrono::duration<double>>(
+              std::chrono::high_resolution_clock::now() - procsucc_a).count() * 1000.0;
+
+    if (maxExpand > 0 && expand_iteration >= maxExpand) {
       if (verbose_)
-        printf("MaxExpandStep [%d] Reached!!!!!!\n\n", max_expand);
+        printf("MaxExpandStep [%d] Reached!!!!!!\n\n", maxExpand);
       return false;
     }
 
@@ -151,18 +181,22 @@ bool GraphSearch::Plan(StatePtr &curr_node_ptr, const int max_expand,
         printf("Priority queue is empty!!!!!!\n\n");
       return false;
     }
-  }
+  } // end while(true)
 
   if (verbose_) {
-    printf("goal g: %f, h: %f!\n", curr_node_ptr->g, curr_node_ptr->h);
+    printf("goal g: %f, h: %f!\n", currNode_ptr->g, currNode_ptr->h);
     printf("Expand [%d] nodes!\n", expand_iteration);
   }
+
+  std::cout << "getsucc_dur: " << getsucc_dur << " s" << std::endl; 
+  std::cout << "procsucc_dur: " << procsucc_dur << " s" << std::endl; 
+
+  path_ = recoverPath(currNode_ptr, start_id);
 
   return true;
 }
 
-std::vector<StatePtr> GraphSearch::RecoverPath(StatePtr node,
-                                               const int start_id) const {
+std::vector<StatePtr> GraphSearch::recoverPath(StatePtr node, int start_id) {
   std::vector<StatePtr> path;
   path.push_back(node);
   while (node && node->id != start_id) {
@@ -173,212 +207,231 @@ std::vector<StatePtr> GraphSearch::RecoverPath(StatePtr node,
   return path;
 }
 
-void GraphSearch::GetSucc(const StatePtr &curr, std::vector<int> &succ_ids,
+void GraphSearch::getSucc(const StatePtr &curr, std::vector<int> &succ_ids,
                           std::vector<double> &succ_costs) {
-  // iterate over neighbours
-  for (const Eigen::Vector3i &d : ns_) {
-    Eigen::Vector3i new_coord = curr->coord + d;
-    if (!IsFree(new_coord))
-      continue;
+    for (const auto &d : ns_) {
+      int new_x = curr->x + d[0];
+      int new_y = curr->y + d[1];
+      int new_z = curr->z + d[2];
+      if (!isFree(new_x, new_y, new_z))
+        continue;
 
-    int new_id = CoordToId(new_coord);
-    if (!seen_[new_id]) {
-      seen_[new_id] = true;
-      hm_[new_id] = std::make_shared<State>(new_id, new_coord, d);
-      hm_[new_id]->h = GetHeur(new_coord);
-    }
-
-    succ_ids.push_back(new_id);
-    double cost_total = Eigen::Vector3d(d(0), d(1), d(2)).norm();
-    if (use_apf_) {
-      cost_total += GetArtificialFieldValue(new_coord);
-    }
-    succ_costs.push_back(cost_total);
-  }
-}
-
-double
-GraphSearch::GetArtificialFieldValue(const Eigen::Vector3i &coord) const {
-  double cost = 0;
-  // search around the coordinate to see if there is an obstacle and compute the
-  // distance to that obstacle
-  double dist_obs = 1e10;
-  bool obs_detected = false;
-
-  for (int i = -(int)apf_dist_; i <= (int)apf_dist_; i++) {
-    for (int j = -(int)apf_dist_; j <= (int)apf_dist_; j++) {
-      for (int k = -(int)apf_dist_; k <= (int)apf_dist_; k++) {
-        Eigen::Vector3i new_coord(coord(0) + i, coord(1) + j, coord(2) + k);
-        if (IsOccupied(new_coord)) {
-          obs_detected = true;
-          double dist_tmp =
-              (new_coord(0) - coord(0)) * (new_coord(0) - coord(0)) +
-              (new_coord(1) - coord(1)) * (new_coord(1) - coord(1)) +
-              (new_coord(2) - coord(2)) * (new_coord(2) - coord(2));
-          if (dist_tmp < dist_obs) {
-            dist_obs = dist_tmp;
-          }
-        }
+      int new_id = coordToId(new_x, new_y, new_z);
+      if (!seen_[new_id]) {
+        seen_[new_id] = true;
+        hm_[new_id] = std::make_shared<State>(new_id, new_x, new_y, new_z, d[0],
+                                              d[1], d[2]);
+        hm_[new_id]->h = getHeur(new_x, new_y, new_z);
       }
-    }
-  }
-  dist_obs = std::sqrt(dist_obs);
 
-  // compute the cost from the minimum distance to obstacle
-  if (obs_detected) {
-    cost = apf_coeff_ / std::pow(dist_obs, (double)apf_degree_);
-  } else {
-    cost = 0;
-  }
-  return cost;
+      succ_ids.push_back(new_id);
+      succ_costs.push_back(std::sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]));
+    }
 }
 
-void GraphSearch::GetJpsSucc(const StatePtr &curr, std::vector<int> &succ_ids,
+void GraphSearch::getJpsSucc(const StatePtr &curr, std::vector<int> &succ_ids,
                              std::vector<double> &succ_costs) {
+    const int norm1 =
+        std::abs(curr->dx) + std::abs(curr->dy) + std::abs(curr->dz);
+    int num_neib = jn3d_->nsz[norm1][0];
+    int num_fneib = jn3d_->nsz[norm1][1];
+    int id = (curr->dx + 1) + 3 * (curr->dy + 1) + 9 * (curr->dz + 1);
 
-  // get direction norm which will determine the number of neighours to
-  // add/check
-  const int norm1 = curr->direction.lpNorm<1>();
-
-  // compute direction vector to goal to prioritize exploration directions
-  Eigen::Vector3d direction_to_goal = (goal_ - curr->coord).cast<double>();
-  direction_to_goal.normalize();
-
-  // get number of neighbours
-  int num_neib = jn3d_->nsz[norm1][0];
-
-  // get number of forced neighbours
-  int num_fneib = jn3d_->nsz[norm1][1];
-
-  // get the unique ID corresponding to the direction which will allow us to
-  // find the corresponding neighours to add and to check if we need to add
-  // forced neighbours
-  int id = (curr->direction[0] + 1) + 3 * (curr->direction[1] + 1) +
-           9 * (curr->direction[2] + 1);
-
-  bool reached_goal = false;
-  for (int dev = 0; dev < num_neib + num_fneib; ++dev) {
-    Eigen::Vector3i new_coord;
-    Eigen::Vector3i direction;
-
-    if (dev < num_neib) {
-      // start by checking the directions that are always checked to see if
-      // there are neighbours to be added
-      direction = jn3d_->ns[id][dev];
-
-      // check if a neighbour in this direction deserves to be added by jumping
-      // ahead
-      if (!Jump(curr->coord, direction, new_coord, reached_goal))
-        continue;
-    } else {
-      // check the forced neighours and add them if they deserve to be added
-      Eigen::Vector3i neigh_coord = curr->coord + jn3d_->f1[id][dev - num_neib];
-
-      // first check if we need to add a potential forced neighour
-      if (IsOccupied(neigh_coord)) {
-        direction = jn3d_->f2[id][dev - num_neib];
-
-        // check if neighbour deserves to be added by jumping ahead
-        if (!Jump(curr->coord, direction, new_coord, reached_goal))
+    for (int dev = 0; dev < num_neib + num_fneib; ++dev) {
+      int new_x, new_y, new_z;
+      int dx, dy, dz;
+      if (dev < num_neib) {
+        dx = jn3d_->ns[id][0][dev];
+        dy = jn3d_->ns[id][1][dev];
+        dz = jn3d_->ns[id][2][dev];
+        if (!jump(curr->x, curr->y, curr->z, dx, dy, dz, new_x, new_y, new_z))
           continue;
-      } else
-        continue;
+      } else {
+        int nx = curr->x + jn3d_->f1[id][0][dev - num_neib];
+        int ny = curr->y + jn3d_->f1[id][1][dev - num_neib];
+        int nz = curr->z + jn3d_->f1[id][2][dev - num_neib];
+        if (isOccupied(nx, ny, nz)) {
+          dx = jn3d_->f2[id][0][dev - num_neib];
+          dy = jn3d_->f2[id][1][dev - num_neib];
+          dz = jn3d_->f2[id][2][dev - num_neib];
+          if (!jump(curr->x, curr->y, curr->z, dx, dy, dz, new_x, new_y, new_z))
+            continue;
+        } else
+          continue;
+      }
+
+      int new_id = coordToId(new_x, new_y, new_z);
+      if (!seen_[new_id]) {
+        seen_[new_id] = true;
+        hm_[new_id] =
+            std::make_shared<State>(new_id, new_x, new_y, new_z, dx, dy, dz);
+        hm_[new_id]->h = getHeur(new_x, new_y, new_z);
+      }
+
+      succ_ids.push_back(new_id);
+      succ_costs.push_back(std::sqrt((new_x - curr->x) * (new_x - curr->x) +
+                                     (new_y - curr->y) * (new_y - curr->y) +
+                                     (new_z - curr->z) * (new_z - curr->z)));
     }
-
-    /* std::cout << "new_coord: " << new_coord.transpose() << std::endl; */
-
-    int new_id = CoordToId(new_coord);
-    if (!seen_[new_id]) {
-      seen_[new_id] = true;
-      hm_[new_id] = std::make_shared<State>(new_id, new_coord, direction);
-      hm_[new_id]->h = GetHeur(new_coord);
-    }
-
-    succ_ids.push_back(new_id);
-    succ_costs.push_back(
-        (Eigen::Vector3d(new_coord(0), new_coord(1), new_coord(2)) -
-         Eigen::Vector3d(curr->coord(0), curr->coord(1), curr->coord(2)))
-            .norm());
-
-    if (reached_goal) {
-      break;
-    }
-  }
 }
 
-bool GraphSearch::Jump(const Eigen::Vector3i &coord,
-                       const Eigen::Vector3i &direction,
-                       Eigen::Vector3i &new_coord, bool &reached_goal) const {
 
-  // jump ahead one unit in the corresponding direction
-  new_coord = coord + direction;
-
-  // check if we hit a wall/obstacle; if yes, the direction is not interesting
-  // and we don't add the node to the priority queue of nodes to explore
-  if (!IsFree(new_coord))
+bool GraphSearch::jump(int x, int y, int z, int dx, int dy, int dz, int &new_x,
+                       int &new_y, int &new_z) {
+  new_x = x + dx;
+  new_y = y + dy;
+  new_z = z + dz;
+  if (!isFree(new_x, new_y, new_z))
     return false;
 
-  // if we hit the goal then the node is interesting and we should add it to the
-  // priority queue of nodes to explore
-  if (new_coord == goal_) {
-    reached_goal = true;
-    return true;
-  }
+  // check if it is traversable for safe corridors
+  if (!isTraversable(x, y, z, dx, dy, dz))
+    return false;
 
-  // if the node that we jumped to has a forced neighbour, then we should add it
-  // to the queue
-  if (HasForced(new_coord, direction))
+  if (new_x == xGoal_ && new_y == yGoal_ && new_z == zGoal_)
     return true;
 
-  // if we don't find any cause for stopping (hitting a wall, finding the goal,
-  // having a forced neighour) than continue jumping forward
-  const int id =
-      (direction[0] + 1) + 3 * (direction[1] + 1) + 9 * (direction[2] + 1);
-  const int norm1 = direction.lpNorm<1>();
+  if (hasForced(new_x, new_y, new_z, dx, dy, dz))
+    return true;
+
+  const int id = (dx + 1) + 3 * (dy + 1) + 9 * (dz + 1);
+  const int norm1 = std::abs(dx) + std::abs(dy) + std::abs(dz);
   int num_neib = jn3d_->nsz[norm1][0];
-
-  // jump for all the neighbours except the one in our direction of movement
-  // (the one in our direction is the last in our neighbour list that is defined
-  // when constructing the object)
   for (int k = 0; k < num_neib - 1; ++k) {
-    Eigen::Vector3i new_new_coord;
-
-    // if one of the neighbours has a forced neighbour or reached the goal, we
-    // need to add the node to the open set, so return true with the new_coord
-    // being our current coordinate
-    if (Jump(new_coord, jn3d_->ns[id][k], new_new_coord, reached_goal))
+    int new_new_x, new_new_y, new_new_z;
+    if (jump(new_x, new_y, new_z, jn3d_->ns[id][0][k], jn3d_->ns[id][1][k],
+             jn3d_->ns[id][2][k], new_new_x, new_new_y, new_new_z))
       return true;
   }
 
-  return Jump(new_coord, direction, new_coord, reached_goal);
+  return jump(new_x, new_y, new_z, dx, dy, dz, new_x, new_y, new_z);
 }
 
-inline bool GraphSearch::HasForced(const Eigen::Vector3i &coord,
-                                   const Eigen::Vector3i &direction) const {
-  int norm1 = direction.lpNorm<1>();
-  int id = (direction[0] + 1) + 3 * (direction[1] + 1) + 9 * (direction[2] + 1);
+
+inline bool GraphSearch::isTraversable(int x, int y, int z, int dx, int dy,
+                                       int dz) {
+  // first check if the norm is bigger than one; if not return true
+  const int norm1 = std::abs(dx) + std::abs(dy) + std::abs(dz);
+  if (norm1 < 2) {
+    return true;
+  } else {
+    // if the norm is 2, then check if we can get to it from the sides
+    if (norm1 == 2) {
+      int x_1, y_1, z_1;
+      int x_2, y_2, z_2;
+      if (dx == 0) {
+        x_1 = x;
+        y_1 = y + dy;
+        z_1 = z;
+
+        x_2 = x;
+        y_2 = y;
+        z_2 = z + dz;
+      } else if (dy == 0) {
+        x_1 = x + dx;
+        y_1 = y;
+        z_1 = z;
+
+        x_2 = x;
+        y_2 = y;
+        z_2 = z + dz;
+      } else {
+        x_1 = x + dx;
+        y_1 = y;
+        z_1 = z;
+
+        x_2 = x;
+        y_2 = y + dy;
+        z_2 = z;
+      }
+      if (isFree(x_1, y_1, z_1) || isFree(x_2, y_2, z_2)) {
+        return true;
+      } else {
+        return false;
+      }
+    } else if (norm1 == 3) {
+      int x_1, y_1, z_1;
+      int x_2, y_2, z_2;
+      int x_3, y_3, z_3;
+      int x_4, y_4, z_4;
+      int x_5, y_5, z_5;
+      int x_6, y_6, z_6;
+
+      x_1 = x + dx;
+      y_1 = y;
+      z_1 = z;
+
+      x_2 = x + dx;
+      y_2 = y + dy;
+      z_2 = z;
+
+      x_3 = x;
+      y_3 = y + dy;
+      z_3 = z;
+
+      if (isFree(x_2, y_2, z_2) &&
+          (isFree(x_1, y_1, z_1) || isFree(x_3, y_3, z_3)))
+        return true;
+
+      x_4 = x;
+      y_4 = y;
+      z_4 = z + dz;
+
+      x_5 = x;
+      y_5 = y + dy;
+      z_5 = z + dz;
+
+      x_6 = x + dx;
+      y_6 = y;
+      z_6 = z + dz;
+
+      if (isFree(x_4, y_4, z_4) &&
+          (isFree(x_5, y_5, z_5) || isFree(x_6, y_6, z_6)))
+        return true;
+
+      if ((isFree(x_1, y_1, z_1) && isFree(x_6, y_6, z_6)) ||
+          (isFree(x_3, y_3, z_3) && isFree(x_5, y_5, z_5)))
+        return true;
+
+      return false;
+    } else {
+      return false;
+    }
+  }
+}
+
+inline bool GraphSearch::hasForced(int x, int y, int z, int dx, int dy,
+                                   int dz) {
+  int norm1 = std::abs(dx) + std::abs(dy) + std::abs(dz);
+  int id = (dx + 1) + 3 * (dy + 1) + 9 * (dz + 1);
   switch (norm1) {
   case 1:
     // 1-d move, check 8 neighbors
     for (int fn = 0; fn < 8; ++fn) {
-      Eigen::Vector3i neigh_coord = coord + jn3d_->f1[id][fn];
-      if (IsOccupied(neigh_coord))
+      int nx = x + jn3d_->f1[id][0][fn];
+      int ny = y + jn3d_->f1[id][1][fn];
+      int nz = z + jn3d_->f1[id][2][fn];
+      if (isOccupied(nx, ny, nz))
         return true;
     }
     return false;
   case 2:
     // 2-d move, check 8 neighbors
     for (int fn = 0; fn < 8; ++fn) {
-      Eigen::Vector3i neigh_coord = coord + jn3d_->f1[id][fn];
-      if (IsOccupied(neigh_coord))
+      int nx = x + jn3d_->f1[id][0][fn];
+      int ny = y + jn3d_->f1[id][1][fn];
+      int nz = z + jn3d_->f1[id][2][fn];
+      if (isOccupied(nx, ny, nz))
         return true;
     }
     return false;
   case 3:
     // 3-d move, check 6 neighbors
     for (int fn = 0; fn < 6; ++fn) {
-      Eigen::Vector3i neigh_coord = coord + jn3d_->f1[id][fn];
-      if (IsOccupied(neigh_coord))
+      int nx = x + jn3d_->f1[id][0][fn];
+      int ny = y + jn3d_->f1[id][1][fn];
+      int nz = z + jn3d_->f1[id][2][fn];
+      if (isOccupied(nx, ny, nz))
         return true;
     }
     return false;
@@ -387,37 +440,29 @@ inline bool GraphSearch::HasForced(const Eigen::Vector3i &coord,
   }
 }
 
-bool GraphSearch::IsFree(const Eigen::Vector3i &coord) const {
-  return vg_->IsFree(coord);
-}
+std::vector<StatePtr> GraphSearch::getPath() const { return path_; }
 
-bool GraphSearch::IsOccupied(const Eigen::Vector3i &coord) const {
-  return vg_->IsOccupied(coord);
-}
-
-std::vector<StatePtr> GraphSearch::GetPath() const { return path_; }
-
-std::vector<StatePtr> GraphSearch::GetOpenSet() const {
+std::vector<StatePtr> GraphSearch::getOpenSet() const {
   std::vector<StatePtr> ss;
-  for (const StatePtr &it : hm_) {
+  for (const auto &it : hm_) {
     if (it && it->opened && !it->closed)
       ss.push_back(it);
   }
   return ss;
 }
 
-std::vector<StatePtr> GraphSearch::GetCloseSet() const {
+std::vector<StatePtr> GraphSearch::getCloseSet() const {
   std::vector<StatePtr> ss;
-  for (const StatePtr &it : hm_) {
+  for (const auto &it : hm_) {
     if (it && it->closed)
       ss.push_back(it);
   }
   return ss;
 }
 
-std::vector<StatePtr> GraphSearch::GetAllSet() const {
+std::vector<StatePtr> GraphSearch::getAllSet() const {
   std::vector<StatePtr> ss;
-  for (const StatePtr &it : hm_) {
+  for (const auto &it : hm_) {
     if (it)
       ss.push_back(it);
   }
@@ -432,16 +477,12 @@ JPS3DNeib::JPS3DNeib() {
     for (int dy = -1; dy <= 1; ++dy) {
       for (int dx = -1; dx <= 1; ++dx) {
         int norm1 = std::abs(dx) + std::abs(dy) + std::abs(dz);
-        int tx, ty, tz;
-        for (int dev = 0; dev < nsz[norm1][0]; ++dev) {
-          Neib(dx, dy, dz, norm1, dev, tx, ty, tz);
-          ns[id][dev] = Eigen::Vector3i(tx, ty, tz);
-        }
-        int fx, fy, fz, nx, ny, nz;
+        for (int dev = 0; dev < nsz[norm1][0]; ++dev)
+          Neib(dx, dy, dz, norm1, dev, ns[id][0][dev], ns[id][1][dev],
+               ns[id][2][dev]);
         for (int dev = 0; dev < nsz[norm1][1]; ++dev) {
-          FNeib(dx, dy, dz, norm1, dev, fx, fy, fz, nx, ny, nz);
-          f1[id][dev] = Eigen::Vector3i(fx, fy, fz);
-          f2[id][dev] = Eigen::Vector3i(nx, ny, nz);
+          FNeib(dx, dy, dz, norm1, dev, f1[id][0][dev], f1[id][1][dev],
+                f1[id][2][dev], f2[id][0][dev], f2[id][1][dev], f2[id][2][dev]);
         }
         id++;
       }
@@ -449,8 +490,8 @@ JPS3DNeib::JPS3DNeib() {
   }
 }
 
-void JPS3DNeib::Neib(const int dx, const int dy, const int dz, const int norm1,
-                     const int dev, int &tx, int &ty, int &tz) {
+void JPS3DNeib::Neib(int dx, int dy, int dz, int norm1, int dev, int &tx,
+                     int &ty, int &tz) {
   switch (norm1) {
   case 0:
     switch (dev) {
@@ -793,7 +834,7 @@ void JPS3DNeib::FNeib(int dx, int dy, int dz, int norm1, int dev, int &fx,
         ny = -dy;
         nz = dz;
         return;
-      // extras
+      // Extras
       case 8:
         fx = 1;
         fy = 0;
@@ -893,7 +934,7 @@ void JPS3DNeib::FNeib(int dx, int dy, int dz, int norm1, int dev, int &fx,
         ny = -1;
         nz = dz;
         return;
-      // extras
+      // Extras
       case 8:
         fx = 0;
         fy = 1;
@@ -993,7 +1034,7 @@ void JPS3DNeib::FNeib(int dx, int dy, int dz, int norm1, int dev, int &fx,
         ny = dy;
         nz = -1;
         return;
-      // extras
+      // Extras
       case 8:
         fx = 0;
         fy = 0;
@@ -1054,7 +1095,7 @@ void JPS3DNeib::FNeib(int dx, int dy, int dz, int norm1, int dev, int &fx,
       ny = dy;
       nz = -dz;
       return;
-    // need to check up to here for forced!
+    // Need to check up to here for forced!
     case 3:
       fx = 0;
       fy = -dy;
@@ -1079,7 +1120,7 @@ void JPS3DNeib::FNeib(int dx, int dy, int dz, int norm1, int dev, int &fx,
       ny = -dy;
       nz = dz;
       return;
-    // extras
+    // Extras
     case 6:
       fx = -dx;
       fy = 0;
@@ -1131,24 +1172,3 @@ void JPS3DNeib::FNeib(int dx, int dy, int dz, int norm1, int dev, int &fx,
     }
   }
 }
-
-std::vector<Eigen::Vector3d>
-ConvertPathToVector(const std::vector<StatePtr> &path) {
-  std::vector<Eigen::Vector3d> path_out;
-  for (const StatePtr &it : path) {
-    path_out.push_back(Eigen::Vector3d(it->coord(0) + 0.5, it->coord(1) + 0.5,
-                                       it->coord(2) + 0.5));
-  }
-  return path_out;
-}
-
-std::vector<std::vector<Eigen::Vector3d>>
-ConvertPathsToVector(const std::vector<std::vector<StatePtr>> &paths) {
-  std::vector<std::vector<Eigen::Vector3d>> paths_out;
-  for (const std::vector<StatePtr> &path : paths) {
-    paths_out.push_back(ConvertPathToVector(path));
-  }
-  return paths_out;
-}
-
-} // namespace path_finding_util

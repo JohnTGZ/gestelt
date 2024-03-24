@@ -31,7 +31,14 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS} 
 )
 
-add_library(path_finding_util src/path_tools.cpp src/graph_search.cpp src/global_planner.cpp src/prm.cpp)
+add_library(path_finding_util 
+  src/distance_map_planner/distance_map_planner.cpp
+  src/distance_map_planner/graph_search.cpp
+
+  src/jps_planner/graph_search.cpp
+  src/jps_planner/jps_planner.cpp
+)
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(path_finding_util
   ${catkin_LIBRARIES}

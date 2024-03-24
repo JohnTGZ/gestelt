@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
-#include <eigen3/Eigen/Core>
+// #include <eigen3/Eigen/Core>
+#include <Eigen/Eigen>
 #include "bonxai/bonxai.hpp"
 
 namespace Bonxai

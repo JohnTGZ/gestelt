@@ -1,7 +1,8 @@
 #pragma once
 
 #include "bonxai/bonxai.hpp"
-#include <eigen3/Eigen/Geometry>
+// #include <eigen3/Eigen/Geometry>
+#include <Eigen/Eigen>
 #include <unordered_set>
 
 namespace Bonxai
@@ -119,6 +120,9 @@ public:
   [[nodiscard]] bool isUnknown(const Bonxai::CoordT& coord) const;
 
   [[nodiscard]] bool isFree(const Bonxai::CoordT& coord) const;
+
+  // Get occupancy grid value from 0.0 to 1.0
+  [[nodiscard]] double getOccVal(const Bonxai::CoordT& coord) const;
 
   void getOccupiedVoxels(std::vector<Bonxai::CoordT>& coords);
 

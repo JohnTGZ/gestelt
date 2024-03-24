@@ -28,7 +28,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES global_planner # Exported libraries
- CATKIN_DEPENDS grid_map # Export grid_map as part of this package
+ CATKIN_DEPENDS grid_map path_finding_util # Export catkin libraries as part of package
 #  DEPENDS system_lib
 )
 
@@ -47,7 +47,7 @@ include_directories(
 ## Declare a C++ library
 add_library(global_planner 
   src/a_star.cpp
-  src/jps.cpp
+  src/jps_wrapper.cpp
 )
 
 ## Specify libraries to link a library or executable target against

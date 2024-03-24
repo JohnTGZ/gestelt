@@ -8,7 +8,7 @@ planner_frequency: 5.0        # [Hz]
 safety_check_frequency: 20.0  # [Hz]
 goal_tolerance: 0.3           # [m] 
 time_to_col_threshold: 0.2    # [s] Threshold for seconds to collision.
-receding_horizon_planning_dist: 7.5        # [m] Receding horizon planning
+receding_horizon_planning_dist: 7.5  # [m] Receding horizon planning, DO NOT EXCEED local_map_size_ param in grid_map 
 
 ##### Front-end params
 front_end:
@@ -75,12 +75,12 @@ optimization:
 ##### Mapping params
 grid_map:
   # global_frame: "world"
-  map_size_x: 80.0
-  map_size_y: 80.0
-  map_size_z: 20.0
-  local_map_size_x: 1.5 
-  local_map_size_y: 1.5 
-  local_map_size_z: 2.5 
+  map_size_x: 50.0
+  map_size_y: 50.0
+  map_size_z: 10.0
+  local_map_size_x: 20.0 
+  local_map_size_y: 20.0 
+  local_map_size_z: 10.0
 
   ground_height: 0.0
 

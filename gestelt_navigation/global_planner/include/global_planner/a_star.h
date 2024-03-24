@@ -148,6 +148,6 @@ private:
   std::unordered_set<PosIdx> closed_list_; // All closed nodes
 
   // std::unique_ptr<OccMap> occ_map_;
-};
+}; // class AStarPlanner
 
 #endif // _A_STAR_PLANNER_H_
