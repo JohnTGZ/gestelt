@@ -1,0 +1,4 @@
+<launch>
+  <!-- Launches a test mission -->
+  <node pkg="gestelt_bringup" name="vicon_antipodal_mission" type="vicon_antipodal_mission.py" output="screen"/>
+</launch>

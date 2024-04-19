@@ -78,16 +78,35 @@ scp -r /home/john/gestelt_ws/src/gestelt/gestelt_bringup/ rock@192.168.31.150:/h
 
 # Simulation tests
 
-## On central computer
+## Vicon Normal
+
+### On central computer
 ```bash
 cd_scripts && cd demo
 ./demo_ctl.sh
-# When ready, launhc the mission
-```
-
-## To simulate the actual drone
-```bash
-cd_scripts && cd demo
+# To simulate the actual drone
 ./gz_sim_single_uav_demo_off_0.sh
 ./gz_sim_single_uav_demo_off_1.sh
+```
+
+## Vicon Antipodal
+
+### On central computer
+```bash
+cd_scripts && cd demo
+./demo_ctl.sh
+# To simulate the actual drone
+./gz_sim_single_uav_demo_off_0.sh
+./gz_sim_single_uav_demo_off_1.sh
+./gz_sim_single_uav_demo_off_2.sh
+```
+
+# Antipodal positions
+```
+drone_pos:  2.4   0             0
+drone_pos:  1.2   2.07846       0
+drone_pos:  -1.2  2.07846       0
+drone_pos:  -2.4  0             0
+drone_pos:  -1.2  -2.07846      0
+drone_pos:  1.2   -2.07846      0
 ```
