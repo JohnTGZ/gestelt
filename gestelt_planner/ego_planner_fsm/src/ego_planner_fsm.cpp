@@ -787,11 +787,11 @@ namespace ego_planner
   {
     Eigen::Vector3d dir = (next_wp - previous_wp).normalized();
     // Offset end_pt_ by the formation position
-    // end_pt_ = next_wp + Eigen::Vector3d(dir(0) * formation_pos_(0) - dir(1) * formation_pos_(1),
-    //                                     dir(1) * formation_pos_(0) + dir(0) * formation_pos_(1),
-    //                                     formation_pos_(2));
+    end_pt_ = next_wp + Eigen::Vector3d(dir(0) * formation_pos_(0) - dir(1) * formation_pos_(1),
+                                        dir(1) * formation_pos_(0) + dir(0) * formation_pos_(1),
+                                        formation_pos_(2));
 
-    end_pt_ = next_wp;
+    // end_pt_ = next_wp;
 
     std::vector<Eigen::Vector3d> one_pt_wps;
     one_pt_wps.push_back(end_pt_);

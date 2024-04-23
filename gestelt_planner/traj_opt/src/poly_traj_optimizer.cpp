@@ -571,6 +571,7 @@ namespace ego_planner
 
       bool occ = grid_map_->getInflateOccupancy(cps_.points.col(i));
 
+
       /*** check if the new collision will be valid ***/
       if (occ)
       {
@@ -617,6 +618,7 @@ namespace ego_planner
         if (j >= cps_.cp_size) // fail to get the obs free point
         {
           ROS_WARN("UAV_%d: WARN! terminal point of the current trajectory is in obstacle, skip this planning.", drone_id_);
+          std::cout << "CPS Point in collision: " << cps_.points.col(i).transpose() << std::endl;
 
           force_stop_type_ = STOP_FOR_ERROR;
           return false;

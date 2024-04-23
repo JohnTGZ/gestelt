@@ -9,9 +9,15 @@ num_drones = 6
 
 # Publisher of server events to trigger change of states for trajectory server 
 server_event_pub = rospy.Publisher('/traj_server_event', Int8, queue_size=10)
+waypoints_pubs = []
 
 # Dictionary of UAV states
 server_states = {}
+
+for drone_id in range(0, num_drones):
+    wp_topic = f"/drone{drone_id}/waypoints"
+    waypoints_pubs.append(rospy.Publisher(wp_topic, Waypoints, queue_size=10))
+
 
 # Check if UAV has achived desired traj_server_state
 def check_traj_server_states(des_traj_server_state):
@@ -57,17 +63,12 @@ def create_pose(x, y, z):
     return pose
 
 def pub_waypoints(waypoints, drone_id):
-    wait_timer0 = rospy.Rate(2) # 1 second
-    # Publisher of server events to trigger change of states for trajectory server 
-    wp_topic = f"/drone{drone_id}/waypoints"
-    waypoints_pub = rospy.Publisher(wp_topic, Waypoints, queue_size=10)
-    wait_timer0.sleep()
-
     wp_msg = Waypoints()
     wp_msg.waypoints.header.frame_id = "world"
     wp_msg.waypoints.poses = waypoints
 
-    waypoints_pub.publish(wp_msg)
+    waypoints_pubs[drone_id].publish(wp_msg)
+
 
 def main():
     print("Start VICON ANTIPODAL MISSION")
@@ -114,7 +115,6 @@ def main():
     wp_4 = []
     wp_5 = []
 
-
     # Origins: 
     # 0: 2.4, 0             0
     # 1: 1.2, 2.07846       0
@@ -128,13 +128,13 @@ def main():
     # 1 <-> 4
     # 2 <-> 5
 
-    z = 2.0
-    wp_0.append(create_pose(-2.4, 0, z)) 
+    z = 1.5
+    wp_0.append(create_pose(-2.4, 0,        z)) 
     wp_1.append(create_pose(-1.2, -2.07846, z))
-    wp_2.append(create_pose(1.2, -2.07846, z))
-    wp_3.append(create_pose(2.4, 0, z))
-    wp_4.append(create_pose(1.2, 2.07846, z))
-    wp_5.append(create_pose(-1.2, 2.07846, z))
+    wp_2.append(create_pose(1.2, -2.07846,  z))
+    wp_3.append(create_pose(2.4, 0,         z))
+    wp_4.append(create_pose(1.2, 2.07846,   z))
+    wp_5.append(create_pose(-1.2, 2.07846,  z))
 
     pub_waypoints(wp_0, 0)
     pub_waypoints(wp_1, 1)

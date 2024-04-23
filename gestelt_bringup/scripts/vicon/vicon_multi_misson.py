@@ -10,10 +10,15 @@ num_drones = 4
 # Publisher of server events to trigger change of states for trajectory server 
 server_event_pub = rospy.Publisher('/traj_server_event', Int8, queue_size=10)
 # Publisher of server events to trigger change of states for trajectory server 
-waypoints_pub = rospy.Publisher('/waypoints', Waypoints, queue_size=10)
+# waypoints_pub = rospy.Publisher('/waypoints', Waypoints, queue_size=10)
+waypoints_pubs = []
 
 # Dictionary of UAV states
 server_states = {}
+
+for drone_id in range(0, num_drones):
+    wp_topic = f"/drone{drone_id}/waypoints"
+    waypoints_pubs.append(rospy.Publisher(wp_topic, Waypoints, queue_size=10))
 
 # Check if UAV has achived desired traj_server_state
 def check_traj_server_states(des_traj_server_state):
@@ -65,6 +70,18 @@ def pub_waypoints(waypoints):
 
     waypoints_pub.publish(wp_msg)
 
+def pub_waypoints(waypoints, drone_id):
+    # wait_timer0 = rospy.Rate(2) # 1 second
+    # Publisher of server events to trigger change of states for trajectory server 
+
+    # wait_timer0.sleep()
+
+    wp_msg = Waypoints()
+    wp_msg.waypoints.header.frame_id = "world"
+    wp_msg.waypoints.poses = waypoints
+
+    waypoints_pubs[drone_id].publish(wp_msg)
+
 def main():
     rospy.init_node('mission_startup', anonymous=True)
     rate = rospy.Rate(5) # 20hz
@@ -95,6 +112,8 @@ def main():
         print("tick!")
         rate.sleep()
 
+    # rospy.Rate(1).sleep()
+
     # Send waypoints to UAVs
     print(f"Sending waypoints to UAVs")
     waypoints = []
@@ -114,7 +133,13 @@ def main():
         waypoints.append(create_pose(min_x, max_y, z))
         waypoints.append(create_pose(min_x, min_y, z))
     waypoints.append(create_pose(0, 0, z))
-    pub_waypoints(waypoints)
+
+    pub_waypoints(waypoints, 0)
+    pub_waypoints(waypoints, 1)
+    pub_waypoints(waypoints, 2)
+    pub_waypoints(waypoints, 3)
+
+    # pub_waypoints(waypoints)
 
 if __name__ == '__main__':
     main()

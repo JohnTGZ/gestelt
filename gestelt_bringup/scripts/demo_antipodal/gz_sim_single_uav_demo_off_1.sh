@@ -31,7 +31,7 @@ roslaunch --wait gestelt_bringup single_uav_sim.launch drone_id:=1 init_x:=1.2 i
 CMD_1="roslaunch --wait gestelt_bringup single_fake_map.launch drone_id:=1"
 
 CMD_2="
-roslaunch --wait gestelt_bringup single_ego_planner.launch drone_id:=1 init_x:=1.2 init_y:=2.07846 POSE_TYPE:=3 SENSOR_TYPE:=1
+roslaunch --wait gestelt_bringup single_ego_planner.launch drone_id:=1 POSE_TYPE:=3 SENSOR_TYPE:=1
 "
 
 if [ "$SESSIONEXISTS" = "" ]
