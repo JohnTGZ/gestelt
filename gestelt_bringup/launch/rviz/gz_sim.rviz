@@ -7,10 +7,15 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /drone0_ego1/Mapping1/occ_grid_inf1/Autocompute Value Bounds1
-        - /drone5_ego1
-        - /drone0_mavros1/Localization1
+        - /drone4_ego1/Planning1
+        - /drone4_ego1/Path1
+        - /drone5_ego1/Path1
         - /drone0_mavros1/Localization1//mavros/local_position/pose1
+        - /drone1_mavros1/Localization1//mavros/local_position/pose1
         - /drone2_mavros1/Localization1
+        - /drone2_mavros1/Localization1//mavros/local_position/pose1
+        - /drone3_mavros1/Localization1
+        - /drone4_mavros1/Localization1
         - /MarkerArray1/Namespaces1
       Splitter Ratio: 0.6323529481887817
     Tree Height: 560
@@ -49,56 +54,12 @@ Visualization Manager:
       Show Trail: false
       Value: false
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Filter (blacklist): ""
       Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_link:
-          Value: true
-        base_link_frd:
-          Value: true
-        drone0_base_link:
-          Value: true
-        drone0_cam_link:
-          Value: true
-        drone0_origin:
-          Value: true
-        drone1_base_link:
-          Value: true
-        drone1_cam_link:
-          Value: true
-        drone1_origin:
-          Value: true
-        drone2_base_link:
-          Value: true
-        drone2_cam_link:
-          Value: true
-        drone2_origin:
-          Value: true
-        drone3_base_link:
-          Value: true
-        drone3_cam_link:
-          Value: true
-        drone4_base_link:
-          Value: true
-        drone4_cam_link:
-          Value: true
-        drone5_base_link:
-          Value: true
-        drone5_cam_link:
-          Value: true
-        map:
-          Value: false
-        map_ned:
-          Value: true
-        odom:
-          Value: true
-        odom_ned:
-          Value: true
-        world:
-          Value: true
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
@@ -106,39 +67,9 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        base_link:
-          base_link_frd:
-            {}
-        odom:
-          odom_ned:
-            {}
-        world:
-          drone3_base_link:
-            drone3_cam_link:
-              {}
-          drone4_base_link:
-            drone4_cam_link:
-              {}
-          drone5_base_link:
-            drone5_cam_link:
-              {}
-          map:
-            drone0_origin:
-              drone0_base_link:
-                drone0_cam_link:
-                  {}
-            drone1_origin:
-              drone1_base_link:
-                drone1_cam_link:
-                  {}
-            drone2_origin:
-              drone2_base_link:
-                drone2_cam_link:
-                  {}
-            map_ned:
-              {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Class: rviz/Group
       Displays:
         - Class: rviz/TF
@@ -211,49 +142,49 @@ Visualization Manager:
               Marker Topic: /drone_0_ego_planner_node/goal_point
               Name: goal_point
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/Marker
-              Enabled: true
+              Enabled: false
               Marker Topic: /drone_0_ego_planner_node/global_list
               Name: global_path
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/Marker
               Enabled: true
               Marker Topic: /drone_0_ego_planner_node/optimal_list
               Name: optimal_list
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/Marker
-              Enabled: true
+              Enabled: false
               Marker Topic: /drone_0_ego_planner_node/failed_list
               Name: FailedList
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/Marker
-              Enabled: true
+              Enabled: false
               Marker Topic: /drone_0_ego_planner_node/a_star_list
               Name: AStar
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/Marker
-              Enabled: true
+              Enabled: false
               Marker Topic: /drone_0_ego_planner_node/init_list
               Name: InitTraj
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
           Enabled: true
           Name: Planning
         - Class: rviz/Group
@@ -327,13 +258,13 @@ Visualization Manager:
         - Class: rviz/Group
           Displays:
             - Class: rviz/Marker
-              Enabled: true
+              Enabled: false
               Marker Topic: /drone_1_ego_planner_node/goal_point
               Name: goal_point
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/Marker
               Enabled: false
               Marker Topic: /drone_1_ego_planner_node/global_list
@@ -411,8 +342,8 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 206; 92; 0
-          Enabled: false
+          Color: 138; 226; 52
+          Enabled: true
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.30000001192092896
@@ -431,7 +362,7 @@ Visualization Manager:
           Shaft Length: 0.10000000149011612
           Topic: /drone1/uav_path
           Unreliable: false
-          Value: false
+          Value: true
       Enabled: true
       Name: drone1_ego
     - Class: rviz/Group
@@ -479,13 +410,13 @@ Visualization Manager:
         - Class: rviz/Group
           Displays:
             - Class: rviz/Marker
-              Enabled: true
+              Enabled: false
               Marker Topic: /drone_2_ego_planner_node/goal_point
               Name: goal_point
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/Marker
               Enabled: false
               Marker Topic: /drone_2_ego_planner_node/global_list
@@ -531,8 +462,8 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 206; 92; 0
-          Enabled: false
+          Color: 138; 226; 52
+          Enabled: true
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.30000001192092896
@@ -551,7 +482,7 @@ Visualization Manager:
           Shaft Length: 0.10000000149011612
           Topic: /drone2/uav_path
           Unreliable: false
-          Value: false
+          Value: true
       Enabled: true
       Name: drone2_ego
     - Class: rviz/Group
@@ -603,7 +534,7 @@ Visualization Manager:
               Marker Topic: /drone_3_ego_planner_node/goal_point
               Name: goal_point
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/Marker
@@ -651,8 +582,8 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 206; 92; 0
-          Enabled: false
+          Color: 138; 226; 52
+          Enabled: true
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.30000001192092896
@@ -671,7 +602,7 @@ Visualization Manager:
           Shaft Length: 0.10000000149011612
           Topic: /drone3/uav_path
           Unreliable: false
-          Value: false
+          Value: true
       Enabled: true
       Name: drone3_ego
     - Class: rviz/Group
@@ -771,7 +702,7 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 206; 92; 0
+          Color: 138; 226; 52
           Enabled: true
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
@@ -891,7 +822,7 @@ Visualization Manager:
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
-          Color: 206; 92; 0
+          Color: 138; 226; 52
           Enabled: true
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
@@ -1138,12 +1069,12 @@ Visualization Manager:
               Class: rviz/Pose
               Color: 252; 233; 79
               Enabled: true
-              Head Length: 0.10000000149011612
-              Head Radius: 0.10000000149011612
+              Head Length: 0.20000000298023224
+              Head Radius: 0.15000000596046448
               Name: /mavros/local_position/pose
               Queue Size: 10
               Shaft Length: 0.5
-              Shaft Radius: 0.029999999329447746
+              Shaft Radius: 0.07999999821186066
               Shape: Arrow
               Topic: /drone2/mavros/local_position/pose
               Unreliable: false
@@ -1183,7 +1114,7 @@ Visualization Manager:
               Topic: /drone2/mavros/local_position/odom
               Unreliable: false
               Value: false
-          Enabled: false
+          Enabled: true
           Name: Localization
       Enabled: true
       Name: drone2_mavros
@@ -1229,12 +1160,12 @@ Visualization Manager:
               Class: rviz/Pose
               Color: 114; 159; 207
               Enabled: true
-              Head Length: 0.10000000149011612
-              Head Radius: 0.10000000149011612
+              Head Length: 0.20000000298023224
+              Head Radius: 0.15000000596046448
               Name: /mavros/local_position/pose
               Queue Size: 10
               Shaft Length: 0.5
-              Shaft Radius: 0.029999999329447746
+              Shaft Radius: 0.07999999821186066
               Shape: Arrow
               Topic: /drone3/mavros/local_position/pose
               Unreliable: false
@@ -1320,12 +1251,12 @@ Visualization Manager:
               Class: rviz/Pose
               Color: 114; 159; 207
               Enabled: true
-              Head Length: 0.10000000149011612
-              Head Radius: 0.10000000149011612
+              Head Length: 0.20000000298023224
+              Head Radius: 0.15000000596046448
               Name: /mavros/local_position/pose
               Queue Size: 10
               Shaft Length: 0.5
-              Shaft Radius: 0.029999999329447746
+              Shaft Radius: 0.07999999821186066
               Shape: Arrow
               Topic: /drone4/mavros/local_position/pose
               Unreliable: false
@@ -1405,22 +1336,6 @@ Visualization Manager:
           Name: Perception
         - Class: rviz/Group
           Displays:
-            - Alpha: 1
-              Axes Length: 1
-              Axes Radius: 0.10000000149011612
-              Class: rviz/Pose
-              Color: 114; 159; 207
-              Enabled: true
-              Head Length: 0.10000000149011612
-              Head Radius: 0.10000000149011612
-              Name: /mavros/local_position/pose
-              Queue Size: 10
-              Shaft Length: 0.5
-              Shaft Radius: 0.029999999329447746
-              Shape: Arrow
-              Topic: /drone5/mavros/local_position/pose
-              Unreliable: false
-              Value: true
             - Angle Tolerance: 0.10000000149011612
               Class: rviz/Odometry
               Covariance:
@@ -1456,6 +1371,22 @@ Visualization Manager:
               Topic: /drone3/mavros/local_position/odom
               Unreliable: false
               Value: false
+            - Alpha: 1
+              Axes Length: 1
+              Axes Radius: 0.10000000149011612
+              Class: rviz/Pose
+              Color: 114; 159; 207
+              Enabled: true
+              Head Length: 0.20000000298023224
+              Head Radius: 0.15000000596046448
+              Name: /mavros/local_position/pose
+              Queue Size: 10
+              Shaft Length: 0.5
+              Shaft Radius: 0.07999999821186066
+              Shape: Arrow
+              Topic: /drone5/mavros/local_position/pose
+              Unreliable: false
+              Value: true
           Enabled: true
           Name: Localization
       Enabled: true
@@ -1822,10 +1753,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 133.5719451904297
+      Scale: 135.5234832763672
       Target Frame: my_view
-      X: 0.19990015029907227
-      Y: -0.0033059343695640564
+      X: 0.26824289560317993
+      Y: 0.030855320394039154
     Saved:
       - Class: rviz/FPS
         Enable Stereo Rendering:

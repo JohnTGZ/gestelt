@@ -17,6 +17,7 @@ FakeDrone::FakeDrone(ros::NodeHandle &nodeHandle) : _nh(nodeHandle) {
 	_nh.param<double>("uav/init_x", init_pos_(0), 0.0);
 	_nh.param<double>("uav/init_y", init_pos_(1), 0.0);
 	_nh.param<double>("uav/init_z", init_pos_(2), 0.0);
+	_nh.param<double>("uav/init_yaw", init_yaw_, 0.0);
 
 	node_name_ = "FakeDrone_" + _id;
 
@@ -61,7 +62,11 @@ FakeDrone::FakeDrone(ros::NodeHandle &nodeHandle) : _nh(nodeHandle) {
 	cmd_des_.pos_targ.position.y = init_pos_(1);
 	cmd_des_.pos_targ.position.z = init_pos_(2);
 
-	cmd_des_.q = Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0);
+	cmd_des_.q = Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitX())
+					* Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY())
+					* Eigen::AngleAxisd(init_yaw_, Eigen::Vector3d::UnitZ());
+
+	// cmd_des_.q = Eigen::Quaterniond(1.0, 0.0, 0.0, 0.0);
 
 	setStateFromCmd(state_cur_, cmd_des_);
 

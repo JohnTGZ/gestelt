@@ -7,6 +7,7 @@
     <arg name="init_x"/>
     <arg name="init_y"/>
     <arg name="init_z"/>
+    <arg name="init_yaw" default="0.0"/>
     <!-- Gazebo parameters -->
     <arg name="vehicle"/>
     <arg name="model"/>
@@ -18,7 +19,7 @@
     <!-- Add static transform from drone to it's origin -->
     <node pkg="tf" type="static_transform_publisher" 
       name="map_to_$(arg drone_id_ns)_origin_tf" 
-      args="$(arg init_x) $(arg init_y) $(arg init_z) 0 0 0 1 map $(arg drone_id_ns)_origin 100" />
+      args="$(arg init_x) $(arg init_y) $(arg init_z) 0 0 0 map $(arg drone_id_ns)_origin 100" />
 
     <!-- Add static transform from base_link to camera_link -->
     <node pkg="tf" type="static_transform_publisher" 
@@ -50,7 +51,7 @@
       <!-- spawn vehicle in Gazebo -->
       <node name="$(arg vehicle)_$(arg drone_id)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
         args="-sdf -param model_description -model $(arg drone_id_ns) 
-        -x $(arg init_x) -y $(arg init_y) -z $(arg init_z) -R 0.0 -P 0.0 -Y 0.0"/>
+        -x $(arg init_x) -y $(arg init_y) -z $(arg init_z) -R 0.0 -P 0.0 -Y $(arg init_yaw)"/>
     
       <!-- MAVROS -->
       <node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">

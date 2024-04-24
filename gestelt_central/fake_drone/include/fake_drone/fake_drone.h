@@ -78,6 +78,7 @@ class FakeDrone
         double pose_pub_freq_; // frequency that pose was published
         double offboard_timeout_; // Timeout for PX4 offboard to continuously receive commands
         Eigen::Vector3d init_pos_;
+        double init_yaw_; // Initial yaw of drone
 
         /* Data */
 

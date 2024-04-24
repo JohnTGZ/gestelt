@@ -251,6 +251,8 @@ void TrajServer::UAVPoseCB(const geometry_msgs::PoseStamped::ConstPtr &msg)
   if (first_pose_){
     last_mission_pos_(0) = uav_pose_.pose.position.x;
     last_mission_pos_(1) = uav_pose_.pose.position.y;
+    last_mission_yaw_ = quaternionToYaw(msg->pose.orientation);
+    
     num_pose_msgs_++;
     if (num_pose_msgs_ > 100){
       first_pose_ = false;

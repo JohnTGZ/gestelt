@@ -110,3 +110,18 @@ drone_pos:  -2.4  0             0
 drone_pos:  -1.2  -2.07846      0
 drone_pos:  1.2   -2.07846      0
 ```
+
+
+
+
+
+
+# Antipodal demo
+
+### Host PC
+1. Start ROSCore
+2. Start Vicon central
+```bash 
+cd_scripts && cd vicon_antipodal
+./vicon_central.sh
+```s

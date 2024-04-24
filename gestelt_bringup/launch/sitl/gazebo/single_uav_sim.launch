@@ -9,6 +9,7 @@
   <arg name="drone_id" default="0"/> 
   <arg name="init_x" default="0.0"/> 
   <arg name="init_y" default="0.0"/> 
+  <arg name="init_yaw" default="0.0"/> 
 
   <!-- Drone in gazebo with mavros plugin -->
   <include file="$(find gestelt_bringup)/launch/sitl/px4_sitl.xml">
@@ -17,6 +18,7 @@
     <arg name="model" default="$(arg model)"/>
     <arg name="init_x"     value="$(arg init_x)"/>
     <arg name="init_y"     value="$(arg init_y)"/>
+    <arg name="init_yaw"     value="$(arg init_yaw)"/>
     <arg name="init_z"     value="0.0"/>
   </include>
 

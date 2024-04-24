@@ -6,6 +6,7 @@
     <arg name="init_x"/>
     <arg name="init_y"/>
     <arg name="init_z"/>
+    <arg name="init_yaw" default="0.0"/>
     <!-- size of map, change the size inflate x, y, z according to your application -->
     <arg name="map_size_x"/>
     <arg name="map_size_y"/>
@@ -47,6 +48,7 @@
         <param name="uav/init_x" value="$(arg init_x)"/>
         <param name="uav/init_y" value="$(arg init_y)"/>
         <param name="uav/init_z" value="$(arg init_z)"/>
+        <param name="uav/init_yaw" value="$(arg init_yaw)"/>
 
         <param name="uav/origin_frame" value="$(arg drone_origin_frame)"/>
         <param name="uav/base_link_frame" value="$(arg drone_id_ns)_base_link"/>
