@@ -10,7 +10,7 @@
       args="0.08 0 0.02 0 0 0 1 $(arg drone_id_ns)_base_link $(arg drone_id_ns)_cam_link 100" />
 
     <group ns="$(arg drone_id_ns)">
-      <arg name="fcu_url" value="/dev/ttyAML0:230400" />
+      <arg name="fcu_url" value="/dev/ttyAML1:230400" />
       <!-- xiaomi laptop -->
       <arg name="gcs_url" value="udp://@192.168.31.22" /> 
       <!-- GCS Desktop -->
