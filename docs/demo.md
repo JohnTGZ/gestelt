@@ -113,9 +113,6 @@ drone_pos:  1.2   -2.07846      0
 
 
 
-
-
-
 # Antipodal demo
 
 ### Host PC
