@@ -42,12 +42,15 @@ sudo nmcli dev wifi connect "wifi_name"
 
 ### Offboard computer (Drone)
 ```bash 
-# Drone 0 (192.168.31.205)
-ssh rock@192.168.31.205
+# Drone 0 (192.168.31.)
+ssh rock@192.168.31.173
 uav_startup 0 
-# Drone 1 (192.168.31.150)
-ssh rock@192.168.31.150
+# Drone 1 (192.168.31.)
+ssh rock@192.168.31.207
 uav_startup 1
+# Drone 2 (192.168.31.)
+ssh rock@192.168.31.150
+uav_startup 2
 ```
 
 ### Host PC
