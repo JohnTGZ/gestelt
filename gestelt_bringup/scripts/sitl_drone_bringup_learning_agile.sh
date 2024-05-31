@@ -17,16 +17,16 @@ SOURCE_WS="
 source $SCRIPT_DIR/../../../devel/setup.bash &&
 "
 # PX4 v1.14.0
-# SOURCE_PX4_AUTOPILOT="
-# source $PX4_AUTOPILOT_REPO_DIR/Tools/simulation/gazebo-classic/setup_gazebo.bash $PX4_AUTOPILOT_REPO_DIR $PX4_AUTOPILOT_REPO_DIR/build/px4_sitl_default &&
-# export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$gestelt_bringup_DIR:$PX4_AUTOPILOT_REPO_DIR:$PX4_AUTOPILOT_REPO_DIR/Tools/simulation/gazebo-classic/sitl_gazebo-classic &&
-# "
+SOURCE_PX4_AUTOPILOT="
+source $PX4_AUTOPILOT_REPO_DIR/Tools/simulation/gazebo-classic/setup_gazebo.bash $PX4_AUTOPILOT_REPO_DIR $PX4_AUTOPILOT_REPO_DIR/build/px4_sitl_default &&
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$gestelt_bringup_DIR:$PX4_AUTOPILOT_REPO_DIR:$PX4_AUTOPILOT_REPO_DIR/Tools/simulation/gazebo-classic/sitl_gazebo-classic &&
+"
 
 # PX4 v1.13.0
-SOURCE_PX4_AUTOPILOT="
-source $PX4_AUTOPILOT_REPO_DIR/Tools/setup_gazebo.bash $PX4_AUTOPILOT_REPO_DIR $PX4_AUTOPILOT_REPO_DIR/build/px4_sitl_default &&
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$gestelt_bringup_DIR:$PX4_AUTOPILOT_REPO_DIR:$PX4_AUTOPILOT_REPO_DIR/Tools/sitl_gazebo &&
-"
+# SOURCE_PX4_AUTOPILOT="
+# source $PX4_AUTOPILOT_REPO_DIR/Tools/setup_gazebo.bash $PX4_AUTOPILOT_REPO_DIR $PX4_AUTOPILOT_REPO_DIR/build/px4_sitl_default &&
+# export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$gestelt_bringup_DIR:$PX4_AUTOPILOT_REPO_DIR:$PX4_AUTOPILOT_REPO_DIR/Tools/sitl_gazebo &&
+# "
 #####
 # Commands
 #####
@@ -40,10 +40,8 @@ CMD_1="
 roslaunch trajectory_server trajectory_server_node.launch rviz_config:=gz_sim
 "
 
-
-
 # Start up script to send commands
-CMD_3="taskset -c 1 roslaunch gestelt_bringup learning_agile_mission.launch platform:='laptop' LAUNCH_DRONE_NODE:=false record:=true"
+CMD_3="taskset -c 1 roslaunch gestelt_bringup learning_agile_mission.launch platform:='laptop' LAUNCH_DRONE_NODE:=false record:=false"
 
 # disarm drone
 # CMD_4="rosservice call /drone_commander/disarm"

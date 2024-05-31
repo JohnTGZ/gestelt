@@ -52,7 +52,6 @@ void TrajServer::init(ros::NodeHandle& nh)
   //MPC control soft real time cmd subscriber
   mpc_soft_RT_cmd_sub_ = nh.subscribe("/learning_agile_agent/soft_RT_mpc_attitude", 1, &TrajServer::MPCControlCb, this);
   
-  
   // Subscription to UAV (via MavROS)
   uav_state_sub_ = nh.subscribe<mavros_msgs::State>("/mavros/state", 10, &TrajServer::UAVStateCb, this);
   pose_sub_ = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 1, &TrajServer::UAVPoseCB, this);
@@ -268,22 +267,15 @@ void TrajServer::execTrajTimerCb(const ros::TimerEvent &e)
   }
 }
 
-
 void TrajServer::MPCControlCb(const mavros_msgs::AttitudeTarget::ConstPtr &msg)
 { 
- 
-
   // std::lock_guard<std::mutex> cmd_guard(cmd_mutex_);
   last_traj_msg_time_ = ros::Time::now();
   last_mission_thrust_ = msg->thrust;
   last_mission_bodyrates_(0) = msg->body_rate.x;
   last_mission_bodyrates_(1) = msg->body_rate.y;
   last_mission_bodyrates_(2) = msg->body_rate.z;
-
-  
 }
-
-
 
 void TrajServer::tickServerStateTimerCb(const ros::TimerEvent &e)
 {
@@ -496,22 +488,20 @@ void TrajServer::debugTimerCb(const ros::TimerEvent &e){
 }
 
 /*circular traj callback*/
-void TrajServer::circularTrajCb(const controller_msgs::FlatTarget::ConstPtr &msg)
-{
-  int type_mask = IGNORE_YAW | IGNORE_YAW_RATE ;
+// void TrajServer::circularTrajCb(const controller_msgs::FlatTarget::ConstPtr &msg)
+// {
+//   int type_mask = IGNORE_YAW | IGNORE_YAW_RATE ;
  
-  last_mission_pos_(0) = msg->position.x;
-  last_mission_pos_(1) = msg->position.y;
-  last_mission_pos_(2) = msg->position.z;
-  last_mission_vel_(0) = msg->velocity.x;
-  last_mission_vel_(1) = msg->velocity.y;
-  last_mission_vel_(2) = msg->velocity.z;
-  last_mission_acc_(0) = msg->acceleration.x;
-  last_mission_acc_(1) = msg->acceleration.y;
-  last_mission_acc_(2) = msg->acceleration.z;
-
-
-}
+//   last_mission_pos_(0) = msg->position.x;
+//   last_mission_pos_(1) = msg->position.y;
+//   last_mission_pos_(2) = msg->position.z;
+//   last_mission_vel_(0) = msg->velocity.x;
+//   last_mission_vel_(1) = msg->velocity.y;
+//   last_mission_vel_(2) = msg->velocity.z;
+//   last_mission_acc_(0) = msg->acceleration.x;
+//   last_mission_acc_(1) = msg->acceleration.y;
+//   last_mission_acc_(2) = msg->acceleration.z;
+// }
 /* Trajectory execution methods */
 
 void TrajServer::execLand()
@@ -591,12 +581,12 @@ void TrajServer::execMission()
 
 }
 
-// try to merge the learning_agile.cpp to here
-void TrajServer::UpdateMPC()
-{
-    MPC_NO_SOLUTION_FLAG_=mpc_controller_->Update();
-    
-}
+// TODO: try to merge the learning_agile.cpp to here
+// void TrajServer::UpdateMPC()
+// {
+//     MPC_NO_SOLUTION_FLAG_=mpc_controller_->Update();
+// }
+
 void TrajServer::execMPCControl()
 {
   // std::lock_guard<std::mutex> cmd_guard(cmd_mutex_);

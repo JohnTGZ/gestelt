@@ -9,7 +9,6 @@ void LearningAgile::init(ros::NodeHandle& nh)
     drone_twist_sub_= nh.subscribe("/mavros/local_position/velocity_local", 1, &LearningAgile::drone_state_twist_cb, this);
     waypoint_sub_ = nh.subscribe("/planner/goals_learning_agile", 1, &LearningAgile::mission_start_cb, this);
 
-
     /////////////////
     /* Publishers */
     /////////////////
@@ -18,7 +17,7 @@ void LearningAgile::init(ros::NodeHandle& nh)
 
     // traverse_time_pub_ = nh.advertise<std_msgs::Float32>>("/learning_agile_agent/traverse_time", 10);
     mpc_runtime_pub_ = nh.advertise<std_msgs::Float64>("/learning_agile_agent/callback_runtime", 10);
-    current_pred_traj_pub_ = nh.advertise<geometry_msgs::PoseArray>("/learning_agile_agent/current_pred_traj", 10);
+    // current_pred_traj_pub_ = nh.advertise<geometry_msgs::PoseArray>("/learning_agile_agent/current_pred_traj", 10);
 
     /////////////////
     /* Timers */
@@ -77,7 +76,6 @@ void LearningAgile::solver_request(){
         solver_extern_param.segment(17,4) = des_trav_quat_;
         solver_extern_param(21) = varying_trav_weight;
 
-        
         double *solver_extern_param_ptr = solver_extern_param.data();
       
         int NP=22;
@@ -104,7 +102,6 @@ void LearningAgile::solver_request(){
     double *drone_state_ptr = drone_state_.data();
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx",drone_state_ptr);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx",drone_state_ptr);
-
 
     // solve the problem
     status = ACADOS_model_acados_solve(acados_ocp_capsule);
@@ -151,7 +148,7 @@ void LearningAgile::setpoint_timer_cb(const ros::TimerEvent &e)
 {   
 
     std::lock_guard<std::mutex> cmd_guard(cmd_mutex_);
-    auto start = std::chrono::high_resolution_clock::now();
+
 
     if (start_soft_RT_mpc_timer_==true)
     {
@@ -162,24 +159,32 @@ void LearningAgile::setpoint_timer_cb(const ros::TimerEvent &e)
         }
         else
         {
-        solver_request();
-        mavros_msgs::AttitudeTarget mpc_cmd;
-        mpc_cmd.header.stamp = ros::Time::now();
-        mpc_cmd.header.frame_id = origin_frame_;
-        mpc_cmd.type_mask = mavros_msgs::AttitudeTarget::IGNORE_ATTITUDE; // Ignore orientation
-        mpc_cmd.thrust = control_opt_[0]/(2.1334185*4);
-        mpc_cmd.body_rate.x = control_opt_[1];
-        mpc_cmd.body_rate.y = control_opt_[2];
-        mpc_cmd.body_rate.z = control_opt_[3];
-        next_attitude_setpoint_pub_.publish(mpc_cmd);
+            tm_mpc_main_.start();   // start stopwatch
 
-        auto end = std::chrono::high_resolution_clock::now();
+            solver_request();
 
-        double preloop_dur = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        
-        std_msgs::Float64 mpc_runtime;
-        mpc_runtime.data = preloop_dur;
-        mpc_runtime_pub_.publish(mpc_runtime);
+            tm_mpc_main_.stop(false); // stop stopwatch
+
+            // Construct MPC command
+            mavros_msgs::AttitudeTarget mpc_cmd;
+            mpc_cmd.header.stamp = ros::Time::now();
+            mpc_cmd.header.frame_id = origin_frame_;
+            mpc_cmd.type_mask = mavros_msgs::AttitudeTarget::IGNORE_ATTITUDE; // Ignore orientation
+            mpc_cmd.thrust = control_opt_[0]/(2.1334185*4); // TODO: where is this value from?
+            mpc_cmd.body_rate.x = control_opt_[1];
+            mpc_cmd.body_rate.y = control_opt_[2];
+            mpc_cmd.body_rate.z = control_opt_[3];
+            // Publish MPC command
+            next_attitude_setpoint_pub_.publish(mpc_cmd);
+
+            if (tm_mpc_main_.getWallNow() > 10){
+                ROS_ERROR("[learning_agile_node]: MPC exceeded 10ms");
+            }
+            
+            // Publish MPC runtime
+            std_msgs::Float64 mpc_runtime;
+            mpc_runtime.data = tm_mpc_main_.getWallNow();
+            mpc_runtime_pub_.publish(mpc_runtime);
         }  
     }  
 }
@@ -224,19 +229,19 @@ void LearningAgile::mission_start_cb(const gestelt_msgs::GoalsPtr &msg)
     
 }
 
-
 // This is the function where the traj_server called, by calling the Update
 // inside the traj_server, there will be no individual learning_agile node
 // input: current state, desired goal state, desired traverse point, desired traverse quaternion
 // output: control input
-bool LearningAgile::Update()
-{   
 
+// TODO: try to merge the learning_agile.cpp to traj_server
+// bool LearningAgile::Update()
+// {   
     
-    if (start_soft_RT_mpc_timer_==true)
-    {   
-        solver_request();
+//     if (start_soft_RT_mpc_timer_==true)
+//     {   
+//         solver_request();
         
-    }  
-    return NO_SOLUTION_FLAG_;
-}
+//     }  
+//     return NO_SOLUTION_FLAG_;
+// }

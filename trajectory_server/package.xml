@@ -23,10 +23,12 @@
 
   <exec_depend>mavros_msgs</exec_depend>
   
-
   <depend>geometry_msgs</depend>
   <depend>gestelt_msgs</depend>
+  <depend>controller_msgs</depend>
+  
   <depend>learning_agile</depend>
+
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->

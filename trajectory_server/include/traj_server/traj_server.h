@@ -106,7 +106,7 @@ private: // Class Methods
   /*
   * @brief Callback for circular trajectory
   */
-  void circularTrajCb(const controller_msgs::FlatTarget::ConstPtr &msg);
+  // void circularTrajCb(const controller_msgs::FlatTarget::ConstPtr &msg);
 
   /**
    * @brief Request for circular trajectory

@@ -7,7 +7,7 @@ For simulation and deployment on a physical drone, PX4 is the firmware of choice
 <img src="docs/pictures/gestelt_architecture_24_10.png" alt="Gestelt Architecture" style="width: 1200px;"/>
 
 # Installation and Setup for Simulation
-1. Install dependencies
+1. Install dependencies for ROS and MAVROS
 ```bash
 # Install ROS (if not done)
 sudo apt install ros-noetic-desktop-full
@@ -18,43 +18,63 @@ sudo apt install ros-${ROS_DISTRO}-mavlink ros-${ROS_DISTRO}-mavros ros-${ROS_DI
 wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
 sudo bash ./install_geographiclib_datasets.sh
 ```
+2. Install acados (https://docs.acados.org/installation/index.html#linux-mac)
+```bash
+git clone --recursive https://github.com/acados/acados.git
+cd ~/acados
+mkdir -p build
+cd build
+cmake -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON -DACADOS_INSTALL_DIR=/usr/ -DACADOS_EXAMPLES=ON ..
+sudo make install -j4
+# To the ~/.bashrc file, add the following
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib 
+export ACADOS_SOURCE_DIR=~/acados 
 
-2. Clone repositories
+# Install acados_template
+cd ~/acados
+pip install -e interfaces/acados_template
+
+# Install terra renderer
+sudo apt install cargo
+sudo apt-get install dvipng texlive-latex-extra texlive-fonts-recommended cm-super
+git clone https://github.com/acados/tera_renderer.git
+cargo build --verbose --release
+# Replaced the file <acados_root_dir>/bin/t_renderer with the one compiled from <tera_renderer_dir>/target/release/t_renderer 
+```
+
+3. Clone repositories
 ```bash
 mkdir -p ~/gestelt_ws/src/
 cd ~/gestelt_ws/src
-git clone https://github.com/JohnTGZ/gestelt.git -b min_snap_tianchensun
+git clone https://github.com/JohnTGZ/gestelt.git -b learning_agile
 cd gestelt
 vcs import < simulators.repos --recursive
 vcs import < thirdparty.repos --recursive
 ```
 
-3. Install PX4 firmware
+4. Install PX4 firmware
 ```bash
 # cd to PX4-Autopilot repo
 cd ~/gestelt_ws/PX4-Autopilot
-
 
 # Copy the custom controller over
 cp -r ~/gestelt_ws/src/gestelt/gestelt_bringup/customized_controller/PositionControl ~/gestelt_ws/PX4-Autopilot/src/modules/mc_pos_control/
 
 bash ./Tools/setup/ubuntu.sh 
-# Make SITL target for Gazebo simulation
+# For PX4 V1.14: Make SITL target for Gazebo simulation
 DONT_RUN=1 make px4_sitl gazebo-classic
-# for PX4 V1.13.0
+# for PX4 V1.13.0 and below
 DONT_RUN=1 make px4_sitl gazebo
-
 
 # Copy the custom drone model over
 cp -r ~/gestelt_ws/src/gestelt/gestelt_bringup/simulation/models/raynor ~/gestelt_ws/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic/models/
 # for PX4 V1.13.0
 cp -r ~/gestelt_ws/src/gestelt/gestelt_bringup/simulation/models/raynor ~/gestelt_ws/PX4-Autopilot/Tools/sitl_gazebo/models/
 
-
 # [EMERGENCY USE] IF you screw up the PX4 Autopilot build at any point, clean up the build files via the following command:
 make distclean
 ```
-4. ACADOS solver installation on the Radxa
+5. ACADOS solver installation on the Radxa
 - Before the installation, the cmake should be updated to the latest version. please refer to this [cmake update](https://zhuanlan.zhihu.com/p/513871916).
 - Requirements
 
@@ -71,7 +91,7 @@ make distclean
      - In the `acados/CMakeLists.txt`,the `BLASFEO_TARGET`and the `HPIPM_TARGET` should be set to `ARMV8A_ARM_CORTEX_A53`.
      - In the `acados/Makefile.rule`, the `BLASFEO_TARGET` should be set to `ARMV8A_ARM_CORTEX_A53` .
      - In the `acados/Makefile.rule`, the `HPIPM_TARGET` should be set to `GENERIC` .
-     - 
+
   - Before `make run_examples_c`
     -  add `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/acados/lib` to the `~/.bashrc` file.
     -  add `export ACADOS_SOURCE_DIR=~/acados` to the `~/.bashrc` file. for acados python interface.
@@ -79,8 +99,6 @@ make distclean
   -  Install ACADOS [python interface](https://docs.acados.org/python_interface/index.html)
      -  `tera_renderer` should be installed from source. refer to this [tera_renderer solution](https://discourse.acados.org/t/problems-with-t-renderer/438)
 
-
-  
 1. Building the workspace
 ```bash
 # Assuming your workspace is named as follows
@@ -132,10 +150,6 @@ The second one is a fake drone with no physics and be used to test the architect
 2. Trajectory Server.
 3. Minimum Snap Trajectory Planner and Sampler.
 4. Mission commands.
-
-
-
-
 
 # Acknowledgements
 1. [EGO-Planner-V2 repo](https://github.com/ZJU-FAST-Lab/EGO-Planner-v2)

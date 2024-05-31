@@ -25,11 +25,8 @@
   "
   />
 
-
-
-
-  <node if="$(arg record)" pkg="rosbag" type="record" name="record" output="screen" args="-o $(find gestelt_bringup)/data/
-  -e $(arg record_topics)"/>
+  <node if="$(arg record)" pkg="rosbag" type="record" name="record" output="screen" 
+        args="-o $(find gestelt_bringup)/data/ -e $(arg record_topics)"/>
 
 
 </launch>

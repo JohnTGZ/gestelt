@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# This script publishes mission setpoints for MPC
+
 import numpy as np
 import rospy
 from gestelt_msgs.msg import CommanderState, Goals, CommanderCommand
@@ -22,7 +25,7 @@ server_event_pub = rospy.Publisher('/traj_server/command', CommanderCommand, que
 waypoints_pub = rospy.Publisher('/planner/goals_learning_agile', Goals, queue_size=10)
 
 # Publisher for desired hover setpoint
-hover_position_pub = rospy.Publisher('/planner/hover_position', Pose, queue_size=10)
+# hover_position_pub = rospy.Publisher('/planner/hover_position', Pose, queue_size=10)
 
 # for visualization
 waypoints_pos_pub = rospy.Publisher('/planner/goals_pos', PoseArray, queue_size=10)
@@ -148,9 +151,9 @@ def pub_waypoints(waypoints,accels,vels):
         wp_acc_msg.accel=accels[1][0]
     
     waypoints_pub.publish(wp_msg)
+    # Publish position and acceleration for visualization
     waypoints_pos_pub.publish(wp_pos_msg)
     waypoints_acc_pub.publish(wp_acc_msg)
-
 
 def main():
     rospy.init_node('mission_startup', anonymous=True)
@@ -193,8 +196,6 @@ def main():
     waypoints = []
 
     # side length 5m
-
-
     
     # world frame is the initial position of the drone
     # map frame is the origin of the map

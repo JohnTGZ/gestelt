@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   gestelt_msgs
+  logger
 )
 
 ## System dependencies are found with CMake's conventions

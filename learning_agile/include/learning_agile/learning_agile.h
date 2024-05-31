@@ -35,7 +35,8 @@
 #include "acados_sim_solver_ACADOS_model.h"
 #include "acados_solver_ACADOS_model.h"
 #include <cmath>
-#endif 
+
+#include <logger/timer.h>
 
 typedef ACADOS_model_solver_capsule* ACADOS_model_solver_capsule_ptr;
 typedef ocp_nlp_config* nlp_config_ptr;
@@ -58,7 +59,9 @@ class LearningAgile{
         void solver_request();
 
         double* getcontrolOpt() { return control_opt_; };
-        bool Update();
+        
+        // Update the solver request
+        // bool Update();
 
     private:
     ros::Subscriber drone_pose_sub_;
@@ -85,17 +88,17 @@ class LearningAgile{
     Eigen::Vector3d start_point_={0,0,0};
     
     // desired goal state
-    Eigen::VectorXd des_goal_state_=Eigen::VectorXd::Zero(10);
-    Eigen::Vector3d des_goal_point_={0,0,0};
-    Eigen::Vector4d des_goal_quat_={1,0,0,0};
-    Eigen::Vector3d des_goal_vel_={0,0,0};
+    Eigen::VectorXd des_goal_state_=Eigen::VectorXd::Zero(10);  // [0-2]: Desired point, [3-5]: Desired vel, [6,9]: Desired quaternion  
+    Eigen::Vector3d des_goal_point_={0,0,0};    // Intermediate var
+    Eigen::Vector4d des_goal_quat_={1,0,0,0};   // Intermediate var
+    Eigen::Vector3d des_goal_vel_={0,0,0};      // Intermediate var
 
     //current drone state
-    Eigen::VectorXd drone_state_=Eigen::VectorXd::Zero(10);
-    Eigen::Vector3d drone_pos_= {0,0,0};
-    Eigen::Vector3d drone_vel_= {0,0,0};
-    Eigen::Vector4d drone_quat_= {1,0,0,0};
-    Eigen::Vector3d drone_ang_vel_= {0,0,0};
+    Eigen::VectorXd drone_state_=Eigen::VectorXd::Zero(10); // [0-2]: Current point, [3-5]: Current vel, [6,9]: Current quaternion  
+    Eigen::Vector3d drone_pos_= {0,0,0};        // Intermediate var
+    Eigen::Vector3d drone_vel_= {0,0,0};        // Intermediate var
+    Eigen::Vector4d drone_quat_= {1,0,0,0};     // Intermediate var
+    Eigen::Vector3d drone_ang_vel_= {0,0,0};    // Intermediate var
 
     //MPC parameters
     double max_tra_w_=0;
@@ -131,4 +134,9 @@ class LearningAgile{
     //threading
     std::mutex cmd_mutex_; 
 
+    // time stopwatch
+    Timer tm_mpc_main_{"MPC_main_loop", 0};
+
 };
+
+#endif 
